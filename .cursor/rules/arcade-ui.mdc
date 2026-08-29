@@ -1,0 +1,14 @@
+---
+description: Tokens e padrões visuais arcade do Hub-games
+globs: "**/*.{tsx,css}"
+alwaysApply: false
+---
+
+# Arcade UI
+
+- Fundo void `#05040a`; acentos neon ciano, magenta, ouro.
+- Fonte pixel (Press Start 2P) só em marcas e CTAs; corpo legível (Geist/Outfit).
+- Scanline muito leve no login; glow nos cards ao hover.
+- Respeitar `prefers-reduced-motion`: desligar partículas, scanline e parallax.
+- Contraste legível para sinopses longas — arcade no mood, não no texto corrido.
+- Badge dourado para platina; feedback de conquista ao marcar zerou/platinou.
