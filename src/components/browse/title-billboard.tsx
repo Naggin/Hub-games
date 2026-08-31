@@ -132,6 +132,7 @@ export function TitleBillboard({
           <ProgressRitual
             gameId={game.id}
             slug={game.slug}
+            title={game.title}
             currentStatus={game.status}
             compact
           />

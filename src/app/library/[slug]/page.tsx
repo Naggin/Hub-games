@@ -137,6 +137,7 @@ export default async function GameDetailPage({
         <ProgressRitual
           gameId={game.id}
           slug={game.slug}
+          title={game.title}
           currentStatus={userEntry?.status}
         />
 

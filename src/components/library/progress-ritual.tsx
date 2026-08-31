@@ -1,13 +1,23 @@
 "use client";
 
-import { useTransition } from "react";
-import confetti from "canvas-confetti";
+import {
+  startTransition,
+  useCallback,
+  useOptimistic,
+  useRef,
+  useState,
+} from "react";
 import { motion } from "motion/react";
-import { Crown, Gamepad2, Skull, Star, Trophy } from "lucide-react";
+import { Check, Crown, Gamepad2, Skull, Star, Trophy } from "lucide-react";
 
 import { updateLibraryStatusAction } from "@/app/actions/library";
+import {
+  ProgressCelebration,
+  type Celebration,
+} from "@/components/library/progress-celebration";
 import { Button } from "@/components/ui/button";
 import type { LibraryStatus } from "@/lib/db/schema";
+import { springSnappy } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 const rituals: {
@@ -48,37 +58,42 @@ const rituals: {
   },
 ];
 
-function celebrate(status: LibraryStatus) {
-  if (status === "beaten" || status === "platinum") {
-    confetti({
-      particleCount: status === "platinum" ? 120 : 60,
-      spread: 70,
-      origin: { y: 0.7 },
-      colors:
-        status === "platinum"
-          ? ["#ffd700", "#fff", "#ff00aa"]
-          : ["#7cff6b", "#00f5ff", "#fff"],
-    });
-  }
-}
-
 export function ProgressRitual({
   gameId,
   slug,
+  title,
   currentStatus,
   compact = false,
 }: {
   gameId: string;
   slug: string;
+  title: string;
   currentStatus?: LibraryStatus | null;
   compact?: boolean;
 }) {
-  const [pending, startTransition] = useTransition();
+  const [optimisticStatus, setOptimisticStatus] = useOptimistic(
+    currentStatus ?? null,
+  );
+  const [celebration, setCelebration] = useState<Celebration | null>(null);
+  const celebrationCount = useRef(0);
+
+  const dismissCelebration = useCallback(() => setCelebration(null), []);
 
   function handleStatus(status: LibraryStatus) {
+    if (status === optimisticStatus) return;
+
+    if (status === "beaten" || status === "platinum") {
+      celebrationCount.current += 1;
+      setCelebration({
+        id: celebrationCount.current,
+        kind: status,
+        gameTitle: title,
+      });
+    }
+
     startTransition(async () => {
+      setOptimisticStatus(status);
       await updateLibraryStatusAction(gameId, status, slug);
-      celebrate(status);
     });
   }
 
@@ -93,26 +108,59 @@ export function ProgressRitual({
             : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5",
         )}
       >
-        {rituals.map(({ status, label, icon: Icon, className }) => (
-          <motion.div key={status} whileTap={{ scale: 0.96 }}>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={pending}
-              onClick={() => handleStatus(status)}
-              className={cn(
-                "h-auto w-full flex-col",
-                compact ? "gap-1 py-2.5" : "gap-2 py-4",
-                className,
-                currentStatus === status && "ring-2 ring-current",
-              )}
-            >
-              <Icon className={compact ? "size-4" : "size-5"} />
-              <span className="text-xs">{label}</span>
-            </Button>
-          </motion.div>
-        ))}
+        {rituals.map(({ status, label, icon: Icon, className }) => {
+          const active = optimisticStatus === status;
+          const implied = status === "beaten" && optimisticStatus === "platinum";
+
+          return (
+            <motion.div key={status} whileTap={{ scale: 0.96 }}>
+              <Button
+                type="button"
+                variant="outline"
+                aria-pressed={active}
+                onClick={() => handleStatus(status)}
+                className={cn(
+                  "relative h-auto w-full flex-col",
+                  compact ? "gap-1 py-2.5" : "gap-2 py-4",
+                  className,
+                )}
+              >
+                {active && (
+                  <motion.span
+                    layoutId={`ritual-active-${gameId}`}
+                    transition={springSnappy}
+                    className="absolute inset-0 rounded-md ring-2 ring-current"
+                  />
+                )}
+
+                {implied && (
+                  <Check
+                    aria-label="Preenchido pela platina"
+                    className={cn(
+                      "absolute right-2 top-2 opacity-70",
+                      compact ? "size-2.5" : "size-3",
+                    )}
+                  />
+                )}
+
+                <Icon className={compact ? "size-4" : "size-5"} />
+                <span className="text-xs">{label}</span>
+              </Button>
+            </motion.div>
+          );
+        })}
       </div>
+
+      {!compact && optimisticStatus === "platinum" && (
+        <p className="text-xs text-muted-foreground">
+          Platina preenche zerado automaticamente.
+        </p>
+      )}
+
+      <ProgressCelebration
+        celebration={celebration}
+        onDismiss={dismissCelebration}
+      />
     </div>
   );
 }

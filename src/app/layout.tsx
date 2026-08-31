@@ -3,6 +3,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { Geist_Mono, Outfit, Press_Start_2P } from "next/font/google";
 
 import { DevModeBanner } from "@/components/layout/dev-mode-banner";
+import { MotionProvider } from "@/components/motion/motion-provider";
 import { isClerkConfigured } from "@/lib/env";
 
 import "./globals.css";
@@ -37,7 +38,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
     >
       <body className="min-h-full flex flex-col bg-background text-foreground antialiased">
         <DevModeBanner />
-        {children}
+        <MotionProvider>{children}</MotionProvider>
       </body>
     </html>
   );
