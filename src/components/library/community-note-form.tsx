@@ -33,7 +33,7 @@ export function CommunityNoteForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-neon-magenta/20 bg-card/50 p-4">
+    <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-neon-magenta/20 bg-card/70 p-4">
       <p className="font-pixel text-[10px] text-neon-magenta">SUA NOTA PRA COMUNIDADE</p>
 
       <div className="space-y-2">
@@ -55,10 +55,10 @@ export function CommunityNoteForm({
           id="body"
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          placeholder="Vale a platina? Como é o final?"
+          placeholder="Vale o tempo? Sem spoiler de história."
           required
           minLength={10}
-          className="border-neon-magenta/20 bg-void/40"
+          className="border-neon-magenta/20 bg-secondary/40"
         />
       </div>
 

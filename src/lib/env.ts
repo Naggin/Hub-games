@@ -11,3 +11,11 @@ export function isDevBypassEnabled() {
 }
 
 export const DEV_USER_ID = "dev_player_001";
+
+export function isSteamApiConfigured() {
+  return Boolean(process.env.STEAM_API_KEY?.trim());
+}
+
+export function getSteamApiKey() {
+  return process.env.STEAM_API_KEY?.trim() || null;
+}

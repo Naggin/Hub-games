@@ -111,7 +111,7 @@ export function ArcadeSignUp() {
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       placeholder="NightRunner"
-                      className="border-neon-magenta/30 bg-void/50"
+                      className="border-neon-magenta/30 bg-secondary/50"
                     />
                   </div>
                   <div className="space-y-2">
@@ -122,7 +122,7 @@ export function ArcadeSignUp() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      className="border-neon-magenta/30 bg-void/50"
+                      className="border-neon-magenta/30 bg-secondary/50"
                     />
                   </div>
                   <div className="space-y-2">
@@ -133,7 +133,7 @@ export function ArcadeSignUp() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      className="border-neon-magenta/30 bg-void/50"
+                      className="border-neon-magenta/30 bg-secondary/50"
                     />
                   </div>
 
@@ -160,7 +160,7 @@ export function ArcadeSignUp() {
                       onChange={(e) => setCode(e.target.value)}
                       placeholder="123456"
                       required
-                      className="border-neon-magenta/30 bg-void/50"
+                      className="border-neon-magenta/30 bg-secondary/50"
                     />
                   </div>
 

@@ -1,6 +1,6 @@
-# Hub-games — O hub arcade do gamer
+# Hub-games — O arcade do nerd gamer
 
-Biblioteca de jogos, progresso (zerou/platinou), notas da comunidade e companheiro IA — com vibe arcade.
+Vitrine estilo Netflix com alma de fliperama: capa grande, o que o jogo é, o que a galera fala e se é pay to win — tudo na hora.
 
 ## Stack
 
@@ -49,9 +49,11 @@ Abra [http://localhost:3000](http://localhost:3000).
 |------|-----------|
 | `/sign-in` | Login arcade (insert coin) |
 | `/sign-up` | Cadastro NEW GAME |
-| `/hub` | Home — continuar jogando, stats, companheiro |
-| `/library` | Catálogo com busca e filtros |
-| `/library/[slug]` | Ficha do jogo + ritual de progresso |
+| `/hub` | Vitrine + catálogo — billboard, continuar, busca/filtros e selo P2W |
+| `/hub?q=` | Deep-link de busca no cabinet |
+| `/library` | Redireciona para `/hub` (query string preservada) |
+| `/library/[slug]` | Ficha do cabinet: proposta, comunidade, P2W e ritual |
+| `/perfil` | Sala de troféus do player |
 
 ## Agentes Cursor
 

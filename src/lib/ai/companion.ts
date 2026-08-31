@@ -38,10 +38,10 @@ export async function handleCompanionChat(
 
     const reply =
       persona === "platinum"
-        ? `Platinum Hunter aqui. Vi sua pergunta sobre "${userText}". No dev mode, configure AI Gateway para respostas completas — mas seu backlog mock já tem Elden Ring em platina!`
+        ? `Caçador de platina na linha. Vi "${userText}". No dev mode o Gateway tá off — mas seu mock já tem Elden Ring no pódio. A ficha espera o ritual.`
         : persona === "coach"
-          ? `Coach: você tem The Witcher 3 em JOGANDO. Quer marcar como zerou hoje?`
-          : `Recommender: com base no seu perfil, sugiro continuar The Witcher 3 ou explorar Hades na biblioteca.`;
+          ? `Coach: Witcher 3 ainda tá em JOGANDO. Quer cravar Zerei hoje? Um toque no ritual e o save atualiza.`
+          : `Indica: continua o Witcher ou mete Hades no cabinet. Sem P2W, loop honesto, a casa recomenda.`;
 
     return createUIMessageStreamResponse({
       stream: new ReadableStream({

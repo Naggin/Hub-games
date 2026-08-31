@@ -63,11 +63,13 @@ export function ProgressRitual({
   slug,
   title,
   currentStatus,
+  compact = false,
 }: {
   gameId: string;
   slug: string;
   title: string;
   currentStatus?: LibraryStatus | null;
+  compact?: boolean;
 }) {
   const [optimisticStatus, setOptimisticStatus] = useOptimistic(
     currentStatus ?? null,
@@ -98,8 +100,14 @@ export function ProgressRitual({
   return (
     <div className="space-y-3">
       <p className="font-pixel text-[10px] text-neon-cyan">RITUAL DE PROGRESSO</p>
-
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+      <div
+        className={cn(
+          "grid gap-2",
+          compact
+            ? "grid-cols-3 sm:grid-cols-5"
+            : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5",
+        )}
+      >
         {rituals.map(({ status, label, icon: Icon, className }) => {
           const active = optimisticStatus === status;
           const implied = status === "beaten" && optimisticStatus === "platinum";
@@ -112,13 +120,14 @@ export function ProgressRitual({
                 aria-pressed={active}
                 onClick={() => handleStatus(status)}
                 className={cn(
-                  "relative h-auto w-full flex-col gap-2 py-4",
+                  "relative h-auto w-full flex-col",
+                  compact ? "gap-1 py-2.5" : "gap-2 py-4",
                   className,
                 )}
               >
                 {active && (
                   <motion.span
-                    layoutId="ritual-active"
+                    layoutId={`ritual-active-${gameId}`}
                     transition={springSnappy}
                     className="absolute inset-0 rounded-md ring-2 ring-current"
                   />
@@ -127,11 +136,14 @@ export function ProgressRitual({
                 {implied && (
                   <Check
                     aria-label="Preenchido pela platina"
-                    className="absolute right-2 top-2 size-3 opacity-70"
+                    className={cn(
+                      "absolute right-2 top-2 opacity-70",
+                      compact ? "size-2.5" : "size-3",
+                    )}
                   />
                 )}
 
-                <Icon className="size-5" />
+                <Icon className={compact ? "size-4" : "size-5"} />
                 <span className="text-xs">{label}</span>
               </Button>
             </motion.div>
@@ -139,7 +151,7 @@ export function ProgressRitual({
         })}
       </div>
 
-      {optimisticStatus === "platinum" && (
+      {!compact && optimisticStatus === "platinum" && (
         <p className="text-xs text-muted-foreground">
           Platina preenche zerado automaticamente.
         </p>

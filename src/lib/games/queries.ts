@@ -1,14 +1,32 @@
-import { and, avg, count, desc, eq, ilike, or } from "drizzle-orm";
+import { and, avg, count, desc, eq, ilike, inArray, or } from "drizzle-orm";
 
 import { getDb } from "@/lib/db";
 import {
   communityNotes,
   games,
   libraryEntries,
+  playerProfiles,
   type LibraryStatus,
 } from "@/lib/db/schema";
+import { enrichGame, type Monetization } from "@/lib/games/catalog";
+import type { GameFicha } from "@/lib/games/ficha";
+import { isSteamApiConfigured } from "@/lib/env";
 import { isMockDbEnabled } from "@/lib/games/mock-data";
 import * as mock from "@/lib/games/mock-data";
+import {
+  clampPinned,
+  defaultPlayerProfile,
+  sanitizeGenres,
+  type PlayerProfile,
+  type ProfileAccent,
+  type ProfilePatch,
+} from "@/lib/profile/types";
+import { getSteamLink, setSteamLink } from "@/lib/steam/links";
+import type {
+  CatalogSteamGame,
+  ExistingLibraryRow,
+  ImportPlanItem,
+} from "@/lib/steam/sync";
 
 export type GameWithStats = {
   id: string;
@@ -24,6 +42,20 @@ export type GameWithStats = {
   metacritic: number | null;
   communityScore: number | null;
   communityReviewCount: number;
+  monetization: Monetization;
+  monetizationLabel: string;
+  communityTake: string;
+  pitch: string;
+  posterUrl: string;
+  backdropUrl: string;
+  summary: {
+    premise: string;
+    howYouPlay: string;
+    whoItsFor: string;
+    communityTalks: string;
+  };
+  longPitch: string;
+  ficha: GameFicha;
   userEntry: {
     status: LibraryStatus;
     personalScore: number | null;
@@ -146,7 +178,7 @@ export async function getGamesWithStats(
     const community = communityMap.get(game.id);
     const entry = entryMap.get(game.id);
 
-    return {
+    return enrichGame({
       id: game.id,
       slug: game.slug,
       title: game.title,
@@ -168,7 +200,7 @@ export async function getGamesWithStats(
             shortNote: entry.shortNote,
           }
         : null,
-    };
+    });
   });
 
   if (search) {
@@ -208,7 +240,19 @@ export async function getUserLibrary(userId: string) {
     .orderBy(desc(libraryEntries.updatedAt));
 }
 
-export async function getUserStats(userId: string) {
+export type UserPrideStats = {
+  total: number;
+  playing: number;
+  beaten: number;
+  platinum: number;
+  wishlist: number;
+  dropped: number;
+  hours: number;
+};
+
+export async function getUserStats(userId: string): Promise<
+  UserPrideStats & { currentlyPlaying: unknown }
+> {
   if (isMockDbEnabled()) return mock.getMockUserStats(userId);
 
   const db = getDb();
@@ -224,6 +268,7 @@ export async function getUserStats(userId: string) {
   );
   const platinum = entries.filter((e) => e.status === "platinum");
   const wishlist = entries.filter((e) => e.status === "wishlist");
+  const dropped = entries.filter((e) => e.status === "dropped");
   const hours = entries.reduce((sum, e) => sum + (e.hoursPlayed ?? 0), 0);
 
   return {
@@ -232,6 +277,7 @@ export async function getUserStats(userId: string) {
     beaten: beaten.length,
     platinum: platinum.length,
     wishlist: wishlist.length,
+    dropped: dropped.length,
     hours: Math.round(hours),
     currentlyPlaying: playing.slice(0, 6),
   };
@@ -250,17 +296,18 @@ export async function upsertLibraryEntry(
   if (isMockDbEnabled()) {
     const game = mock.getMockGames(200).find((g) => g.id === gameId);
     if (game) {
-      mock.updateMockLibraryStatus(userId, game.slug, data.status);
+      mock.patchMockLibrary(userId, game.slug, data);
     }
+    const stored = game ? mock.getMockLibraryEntry(userId, game.slug) : null;
 
     return {
       id: `mock-${gameId}`,
       userId,
       gameId,
-      status: data.status,
-      personalScore: data.personalScore ?? null,
-      hoursPlayed: data.hoursPlayed ?? null,
-      shortNote: data.shortNote ?? null,
+      status: stored?.status ?? data.status,
+      personalScore: stored?.personalScore ?? null,
+      hoursPlayed: stored?.hoursPlayed ?? null,
+      shortNote: stored?.shortNote ?? null,
       startedAt: null,
       beatenAt: null,
       platinumAt: null,
@@ -271,6 +318,25 @@ export async function upsertLibraryEntry(
   const db = getDb();
   const now = new Date();
 
+  const [existing] = await db
+    .select()
+    .from(libraryEntries)
+    .where(
+      and(eq(libraryEntries.userId, userId), eq(libraryEntries.gameId, gameId)),
+    )
+    .limit(1);
+
+  const personalScore =
+    data.personalScore !== undefined
+      ? data.personalScore
+      : (existing?.personalScore ?? null);
+  const hoursPlayed =
+    data.hoursPlayed !== undefined
+      ? data.hoursPlayed
+      : (existing?.hoursPlayed ?? null);
+  const shortNote =
+    data.shortNote !== undefined ? data.shortNote : (existing?.shortNote ?? null);
+
   const timestamps: {
     startedAt?: Date;
     beatenAt?: Date | null;
@@ -278,16 +344,16 @@ export async function upsertLibraryEntry(
   } = {};
 
   if (data.status === "playing") {
-    timestamps.startedAt = now;
+    timestamps.startedAt = existing?.startedAt ?? now;
   }
 
   if (data.status === "beaten" || data.status === "platinum") {
-    timestamps.beatenAt = now;
+    timestamps.beatenAt = existing?.beatenAt ?? now;
   }
 
   if (data.status === "platinum") {
-    timestamps.platinumAt = now;
-    timestamps.beatenAt = now;
+    timestamps.platinumAt = existing?.platinumAt ?? now;
+    timestamps.beatenAt = existing?.beatenAt ?? now;
   }
 
   const [entry] = await db
@@ -296,9 +362,9 @@ export async function upsertLibraryEntry(
       userId,
       gameId,
       status: data.status,
-      personalScore: data.personalScore ?? null,
-      hoursPlayed: data.hoursPlayed ?? null,
-      shortNote: data.shortNote ?? null,
+      personalScore,
+      hoursPlayed,
+      shortNote,
       ...timestamps,
       updatedAt: now,
     })
@@ -306,15 +372,11 @@ export async function upsertLibraryEntry(
       target: [libraryEntries.userId, libraryEntries.gameId],
       set: {
         status: data.status,
-        personalScore: data.personalScore ?? null,
-        hoursPlayed: data.hoursPlayed ?? null,
-        shortNote: data.shortNote ?? null,
+        personalScore,
+        hoursPlayed,
+        shortNote,
         updatedAt: now,
-        ...(data.status === "playing" ? { startedAt: now } : {}),
-        ...(data.status === "beaten" || data.status === "platinum"
-          ? { beatenAt: now }
-          : {}),
-        ...(data.status === "platinum" ? { platinumAt: now } : {}),
+        ...timestamps,
       },
     })
     .returning();
@@ -418,9 +480,13 @@ export async function getGameWithFullDetails(
 
   const notes = await getCommunityNotesForGame(game.id);
 
+  const communityScore = community?.avgScore
+    ? Number(community.avgScore)
+    : null;
+
   return {
-    game,
-    communityScore: community?.avgScore ? Number(community.avgScore) : null,
+    game: enrichGame({ ...game, communityScore }),
+    communityScore,
     communityReviewCount: Number(community?.count ?? 0),
     userEntry,
     notes,
@@ -443,13 +509,13 @@ export async function getPlayingGamesWithDetails(userId: string) {
         platinumAt: null,
         updatedAt: new Date(),
       },
-      game,
+      game: enrichGame(game),
     }));
   }
 
   const db = getDb();
 
-  return db
+  const rows = await db
     .select({
       entry: libraryEntries,
       game: games,
@@ -464,6 +530,11 @@ export async function getPlayingGamesWithDetails(userId: string) {
     )
     .orderBy(desc(libraryEntries.updatedAt))
     .limit(6);
+
+  return rows.map(({ entry, game }) => ({
+    entry,
+    game: enrichGame(game),
+  }));
 }
 
 export async function upsertGameFromRawg(data: {
@@ -508,4 +579,368 @@ export async function upsertGameFromRawg(data: {
     .returning();
 
   return game;
+}
+
+function isAccent(value: unknown): value is ProfileAccent {
+  return value === "cyan" || value === "magenta" || value === "gold";
+}
+
+function rowToProfile(
+  userId: string,
+  row: typeof playerProfiles.$inferSelect | undefined,
+): PlayerProfile {
+  if (!row) return defaultPlayerProfile(userId);
+  return {
+    userId: row.userId,
+    displayName: row.displayName,
+    nameplate: row.nameplate || "1P",
+    bio: row.bio,
+    favoriteGenres: row.favoriteGenres ?? [],
+    accent: isAccent(row.accent) ? row.accent : "cyan",
+    pinnedSlugs: row.pinnedSlugs ?? [],
+    platinumRank: row.platinumRank ?? [],
+    beatenRank: row.beatenRank ?? [],
+    worstRank: row.worstRank ?? [],
+    steamId: row.steamId ?? null,
+    updatedAt: row.updatedAt,
+  };
+}
+
+function withSteamOverlay(profile: PlayerProfile): PlayerProfile {
+  const overlay = getSteamLink(profile.userId);
+  if (!overlay) return profile;
+  return {
+    ...profile,
+    steamId: overlay.steamId,
+  };
+}
+
+export async function getPlayerProfile(userId: string): Promise<PlayerProfile> {
+  if (isMockDbEnabled()) {
+    return withSteamOverlay(mock.getMockPlayerProfile(userId));
+  }
+
+  const db = getDb();
+  const [row] = await db
+    .select()
+    .from(playerProfiles)
+    .where(eq(playerProfiles.userId, userId))
+    .limit(1);
+
+  return withSteamOverlay(rowToProfile(userId, row));
+}
+
+export async function updatePlayerProfile(
+  userId: string,
+  patch: ProfilePatch,
+): Promise<PlayerProfile> {
+  if (isMockDbEnabled()) {
+    if (patch.steamId !== undefined) {
+      setSteamLink(userId, { steamId: patch.steamId });
+    }
+    return mock.updateMockPlayerProfile(userId, patch);
+  }
+
+  const current = await getPlayerProfile(userId);
+  const next: PlayerProfile = {
+    ...current,
+    displayName:
+      patch.displayName?.trim().slice(0, 32) || current.displayName,
+    nameplate:
+      patch.nameplate != null
+        ? patch.nameplate.trim().slice(0, 16).toUpperCase() || current.nameplate
+        : current.nameplate,
+    bio: patch.bio != null ? patch.bio.trim().slice(0, 180) : current.bio,
+    favoriteGenres: patch.favoriteGenres
+      ? sanitizeGenres(patch.favoriteGenres)
+      : current.favoriteGenres,
+    accent: isAccent(patch.accent) ? patch.accent : current.accent,
+    pinnedSlugs: patch.pinnedSlugs
+      ? clampPinned(patch.pinnedSlugs)
+      : current.pinnedSlugs,
+    platinumRank: uniqueSlugs(patch.platinumRank ?? current.platinumRank),
+    beatenRank: uniqueSlugs(patch.beatenRank ?? current.beatenRank),
+    worstRank: uniqueSlugs(patch.worstRank ?? current.worstRank),
+    steamId: patch.steamId !== undefined ? patch.steamId : current.steamId,
+    updatedAt: new Date(),
+  };
+
+  if (patch.steamId !== undefined) {
+    setSteamLink(userId, { steamId: patch.steamId });
+  }
+
+  const db = getDb();
+  await db
+    .insert(playerProfiles)
+    .values({
+      userId,
+      displayName: next.displayName,
+      nameplate: next.nameplate,
+      bio: next.bio,
+      favoriteGenres: next.favoriteGenres,
+      accent: next.accent,
+      pinnedSlugs: next.pinnedSlugs,
+      platinumRank: next.platinumRank,
+      beatenRank: next.beatenRank,
+      worstRank: next.worstRank,
+      steamId: next.steamId,
+      updatedAt: next.updatedAt,
+    })
+    .onConflictDoUpdate({
+      target: playerProfiles.userId,
+      set: {
+        displayName: next.displayName,
+        nameplate: next.nameplate,
+        bio: next.bio,
+        favoriteGenres: next.favoriteGenres,
+        accent: next.accent,
+        pinnedSlugs: next.pinnedSlugs,
+        platinumRank: next.platinumRank,
+        beatenRank: next.beatenRank,
+        worstRank: next.worstRank,
+        steamId: next.steamId,
+        updatedAt: next.updatedAt,
+      },
+    });
+
+  return next;
+}
+
+function uniqueSlugs(slugs: string[]) {
+  return [...new Set(slugs.filter(Boolean))];
+}
+
+export async function getCatalogBySteamAppIds(
+  appIds: number[],
+): Promise<CatalogSteamGame[]> {
+  const unique = [...new Set(appIds.filter((id) => Number.isFinite(id)))];
+  if (unique.length === 0) return [];
+
+  if (isMockDbEnabled()) {
+    return mock.getMockGamesBySteamAppIds(unique).flatMap((game) =>
+      game.steamAppId == null
+        ? []
+        : [
+            {
+              id: game.id,
+              slug: game.slug,
+              title: game.title,
+              steamAppId: game.steamAppId,
+            },
+          ],
+    );
+  }
+
+  const db = getDb();
+  const rows = await db
+    .select({
+      id: games.id,
+      slug: games.slug,
+      title: games.title,
+      steamAppId: games.steamAppId,
+    })
+    .from(games)
+    .where(inArray(games.steamAppId, unique));
+
+  return rows.flatMap((row) =>
+    row.steamAppId == null
+      ? []
+      : [
+          {
+            id: row.id,
+            slug: row.slug,
+            title: row.title,
+            steamAppId: row.steamAppId,
+          },
+        ],
+  );
+}
+
+export async function getLibraryRowsForSteam(
+  userId: string,
+): Promise<ExistingLibraryRow[]> {
+  if (isMockDbEnabled()) {
+    return mock.listMockLibraryRows(userId).map((row) => ({
+      gameId: row.gameId,
+      status: row.status,
+      personalScore: row.personalScore,
+      hoursPlayed: row.hoursPlayed,
+      shortNote: row.shortNote,
+    }));
+  }
+
+  const db = getDb();
+  const rows = await db
+    .select({
+      gameId: libraryEntries.gameId,
+      status: libraryEntries.status,
+      personalScore: libraryEntries.personalScore,
+      hoursPlayed: libraryEntries.hoursPlayed,
+      shortNote: libraryEntries.shortNote,
+    })
+    .from(libraryEntries)
+    .where(eq(libraryEntries.userId, userId));
+
+  return rows;
+}
+
+export async function applySteamImportPlan(
+  userId: string,
+  items: ImportPlanItem[],
+) {
+  for (const item of items) {
+    if (isMockDbEnabled()) {
+      mock.patchMockLibrary(userId, item.slug, {
+        status: item.status,
+        hoursPlayed: item.hoursPlayed,
+      });
+      continue;
+    }
+
+    await upsertLibraryEntry(userId, item.gameId, {
+      status: item.status,
+      hoursPlayed: item.hoursPlayed,
+    });
+  }
+}
+
+export type RankedGame = {
+  slug: string;
+  title: string;
+  coverUrl: string;
+  posterUrl: string;
+  personalScore: number | null;
+  communityScore: number | null;
+  status: LibraryStatus | null;
+  hoursPlayed?: number | null;
+};
+
+export async function getProfileCabinet(userId: string) {
+  const [profile, gamesList, stats] = await Promise.all([
+    getPlayerProfile(userId),
+    getGamesWithStats(userId, { limit: 200 }),
+    getUserStats(userId),
+  ]);
+
+  const bySlug = new Map(gamesList.map((game) => [game.slug, game]));
+
+  function toRanked(game: NonNullable<ReturnType<typeof bySlug.get>>): RankedGame {
+    return {
+      slug: game.slug,
+      title: game.title,
+      coverUrl: game.coverUrl,
+      posterUrl: game.posterUrl,
+      personalScore: game.userEntry?.personalScore ?? null,
+      communityScore: game.communityScore,
+      status: game.userEntry?.status ?? null,
+      hoursPlayed: game.userEntry?.hoursPlayed ?? null,
+    };
+  }
+
+  function resolveList(slugs: string[]): RankedGame[] {
+    return slugs
+      .map((slug) => bySlug.get(slug))
+      .filter((game): game is NonNullable<typeof game> => Boolean(game))
+      .map(toRanked);
+  }
+
+  function mergeRank(curated: RankedGame[], eligible: RankedGame[]) {
+    const seen = new Set<string>();
+    const merged: RankedGame[] = [];
+    for (const game of [...curated, ...eligible]) {
+      if (seen.has(game.slug)) continue;
+      seen.add(game.slug);
+      merged.push(game);
+    }
+    return merged;
+  }
+
+  const library = gamesList.filter((game) => game.userEntry);
+  const platinumEligible = library.filter(
+    (game) => game.userEntry?.status === "platinum",
+  );
+  const beatenEligible = library.filter((game) =>
+    ["beaten", "platinum"].includes(game.userEntry?.status ?? ""),
+  );
+  const worstEligible = library.filter((game) => {
+    const status = game.userEntry?.status;
+    const score = game.userEntry?.personalScore;
+    if (status === "dropped") return true;
+    if (score != null && score <= 5) return true;
+    return Boolean(game.userEntry);
+  });
+
+  const showcase = beatenEligible.map(toRanked);
+  const nowPlaying = library
+    .filter((game) => game.userEntry?.status === "playing")
+    .map(toRanked);
+  const backlog = library
+    .filter((game) => game.userEntry?.status === "wishlist")
+    .map(toRanked);
+
+  const platinumRanked = mergeRank(
+    resolveList(profile.platinumRank),
+    platinumEligible.map(toRanked),
+  );
+  const beatenRanked = mergeRank(
+    resolveList(profile.beatenRank),
+    beatenEligible.map(toRanked),
+  );
+  const worstRanked = mergeRank(
+    resolveList(profile.worstRank),
+    worstEligible
+      .filter(
+        (game) =>
+          game.userEntry?.status === "dropped" ||
+          (game.userEntry?.personalScore != null &&
+            game.userEntry.personalScore <= 5),
+      )
+      .map(toRanked),
+  );
+  const pinnedResolved = resolveList(profile.pinnedSlugs);
+  const pinned =
+    pinnedResolved.length > 0
+      ? pinnedResolved
+      : [...platinumRanked, ...beatenRanked].slice(0, 4);
+
+  const genrePool = [
+    ...new Set(gamesList.flatMap((game) => game.genres)),
+  ].sort((a, b) => a.localeCompare(b, "pt-BR"));
+
+  const overlay = getSteamLink(userId);
+
+  return {
+    profile,
+    stats,
+    games: gamesList,
+    genrePool,
+    pinned,
+    showcase,
+    nowPlaying,
+    backlog,
+    steam: {
+      steamId: profile.steamId,
+      demo: !isSteamApiConfigured(),
+      lastSyncedAt: overlay?.lastSyncedAt?.toISOString() ?? null,
+    },
+    ranks: {
+      platinum: platinumRanked,
+      beaten: beatenRanked,
+      worst: worstRanked,
+    },
+    candidates: {
+      platinum: platinumEligible
+        .filter((game) => !profile.platinumRank.includes(game.slug))
+        .map((game) => ({ slug: game.slug, title: game.title })),
+      beaten: beatenEligible
+        .filter((game) => !profile.beatenRank.includes(game.slug))
+        .map((game) => ({ slug: game.slug, title: game.title })),
+      worst: worstEligible
+        .filter((game) => !profile.worstRank.includes(game.slug))
+        .map((game) => ({ slug: game.slug, title: game.title })),
+      pinned: library
+        .filter((game) => !profile.pinnedSlugs.includes(game.slug))
+        .map((game) => ({ slug: game.slug, title: game.title })),
+    },
+  };
 }

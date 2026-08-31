@@ -30,38 +30,26 @@ export async function updateLibraryStatusAction(
   revalidatePath("/hub");
   revalidatePath("/library");
   revalidatePath(`/library/${slug}`);
+  revalidatePath("/perfil");
 }
 
-export async function updatePersonalScoreAction(
+export async function updateLibrarySaveAction(
   gameId: string,
-  personalScore: number,
   slug: string,
+  personalScore: number | null,
+  hoursPlayed: number | null,
+  status?: LibraryStatus | null,
 ) {
   const userId = await requireUserId();
-  const { getDb } = await import("@/lib/db");
-  const { libraryEntries } = await import("@/lib/db/schema");
-  const { and, eq } = await import("drizzle-orm");
-
-  const db = getDb();
-  const [existing] = await db
-    .select()
-    .from(libraryEntries)
-    .where(
-      and(
-        eq(libraryEntries.userId, userId),
-        eq(libraryEntries.gameId, gameId),
-      ),
-    )
-    .limit(1);
-
   await upsertLibraryEntry(userId, gameId, {
-    status: existing?.status ?? "wishlist",
+    status: status ?? "wishlist",
     personalScore,
+    hoursPlayed,
   });
-
   revalidatePath("/hub");
   revalidatePath("/library");
   revalidatePath(`/library/${slug}`);
+  revalidatePath("/perfil");
 }
 
 export async function submitCommunityNoteAction(
@@ -75,4 +63,5 @@ export async function submitCommunityNoteAction(
   revalidatePath("/library");
   revalidatePath(`/library/${slug}`);
   revalidatePath("/hub");
+  revalidatePath("/perfil");
 }

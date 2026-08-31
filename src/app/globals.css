@@ -54,27 +54,27 @@
 }
 
 :root {
-  --void: #05040a;
+  --void: #171428;
   --neon-cyan: #00f5ff;
   --neon-magenta: #ff00aa;
   --neon-gold: #ffd700;
-  --background: #05040a;
-  --foreground: #f0f4ff;
-  --card: #0c0a14;
-  --card-foreground: #f0f4ff;
-  --popover: #0c0a14;
-  --popover-foreground: #f0f4ff;
+  --background: #171428;
+  --foreground: #f4f6ff;
+  --card: #221e3a;
+  --card-foreground: #f4f6ff;
+  --popover: #221e3a;
+  --popover-foreground: #f4f6ff;
   --primary: #00f5ff;
-  --primary-foreground: #05040a;
-  --secondary: #151222;
-  --secondary-foreground: #f0f4ff;
-  --muted: #151222;
-  --muted-foreground: #9aa3b8;
-  --accent: #1a1530;
+  --primary-foreground: #171428;
+  --secondary: #2d2748;
+  --secondary-foreground: #f4f6ff;
+  --muted: #2d2748;
+  --muted-foreground: #b4bcd2;
+  --accent: #382f58;
   --accent-foreground: #ff00aa;
   --destructive: #ff4466;
-  --border: rgba(0, 245, 255, 0.12);
-  --input: rgba(0, 245, 255, 0.15);
+  --border: rgba(0, 245, 255, 0.16);
+  --input: rgba(0, 245, 255, 0.18);
   --ring: #00f5ff;
   --chart-1: #00f5ff;
   --chart-2: #ff00aa;
@@ -82,19 +82,19 @@
   --chart-4: #7cff6b;
   --chart-5: #a78bfa;
   --radius: 0.75rem;
-  --sidebar: #0c0a14;
-  --sidebar-foreground: #f0f4ff;
+  --sidebar: #221e3a;
+  --sidebar-foreground: #f4f6ff;
   --sidebar-primary: #00f5ff;
-  --sidebar-primary-foreground: #05040a;
-  --sidebar-accent: #151222;
-  --sidebar-accent-foreground: #f0f4ff;
-  --sidebar-border: rgba(0, 245, 255, 0.12);
+  --sidebar-primary-foreground: #171428;
+  --sidebar-accent: #2d2748;
+  --sidebar-accent-foreground: #f4f6ff;
+  --sidebar-border: rgba(0, 245, 255, 0.16);
   --sidebar-ring: #00f5ff;
 }
 
 .dark {
-  --background: #05040a;
-  --foreground: #f0f4ff;
+  --background: #171428;
+  --foreground: #f4f6ff;
 }
 
 @layer base {
@@ -104,8 +104,9 @@
   body {
     @apply bg-background text-foreground min-h-screen;
     background-image:
-      radial-gradient(circle at 20% 20%, rgba(0, 245, 255, 0.06), transparent 40%),
-      radial-gradient(circle at 80% 0%, rgba(255, 0, 170, 0.05), transparent 35%);
+      radial-gradient(circle at 20% 20%, rgba(0, 245, 255, 0.14), transparent 42%),
+      radial-gradient(circle at 80% 0%, rgba(255, 0, 170, 0.12), transparent 38%),
+      radial-gradient(circle at 50% 110%, rgba(255, 215, 0, 0.06), transparent 42%);
   }
   html {
     @apply font-sans;
@@ -150,46 +151,115 @@
 
   .arcade-grid {
     background-image:
-      linear-gradient(rgba(0, 245, 255, 0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0, 245, 255, 0.04) 1px, transparent 1px);
+      linear-gradient(rgba(0, 245, 255, 0.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 245, 255, 0.07) 1px, transparent 1px);
     background-size: 40px 40px;
   }
-}
 
-::view-transition {
-  pointer-events: none;
-}
-
-::view-transition-group(hub-header) {
-  animation: none;
-  z-index: 100;
-}
-
-::view-transition-old(hub-header) {
-  display: none;
-}
-
-::view-transition-new(hub-header) {
-  animation: none;
-}
-
-::view-transition-group(.morph) {
-  animation-duration: 380ms;
-}
-
-::view-transition-image-pair(.morph) {
-  animation-name: morph-blur;
-}
-
-@keyframes morph-blur {
-  30% {
-    filter: blur(3px);
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .trophy-wash-cyan {
+    background-image:
+      radial-gradient(ellipse 80% 55% at 8% 0%, rgba(0, 245, 255, 0.28), transparent 58%),
+      radial-gradient(ellipse 50% 40% at 92% 18%, rgba(0, 245, 255, 0.1), transparent 50%),
+      radial-gradient(ellipse 70% 50% at 70% 100%, rgba(255, 0, 170, 0.08), transparent 55%);
+  }
+
+  .trophy-wash-magenta {
+    background-image:
+      radial-gradient(ellipse 80% 55% at 8% 0%, rgba(255, 0, 170, 0.3), transparent 58%),
+      radial-gradient(ellipse 50% 40% at 92% 18%, rgba(255, 0, 170, 0.12), transparent 50%),
+      radial-gradient(ellipse 70% 50% at 70% 100%, rgba(0, 245, 255, 0.08), transparent 55%);
+  }
+
+  .trophy-wash-gold {
+    background-image:
+      radial-gradient(ellipse 80% 55% at 8% 0%, rgba(255, 215, 0, 0.26), transparent 58%),
+      radial-gradient(ellipse 50% 40% at 92% 18%, rgba(255, 215, 0, 0.1), transparent 50%),
+      radial-gradient(ellipse 70% 50% at 70% 100%, rgba(255, 0, 170, 0.1), transparent 55%);
+  }
+
+  .crt-bezel {
+    background:
+      linear-gradient(180deg, #3a3458 0%, #221e3a 42%, #161326 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      inset 0 -18px 24px rgba(0, 0, 0, 0.45),
+      0 24px 48px rgba(0, 0, 0, 0.4);
+  }
+
+  .nameplate-stamp {
+    background: linear-gradient(180deg, #f3e2a0 0%, #c9a227 48%, #8a6a12 100%);
+    color: #171428;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.55),
+      inset 0 -2px 0 rgba(80, 50, 0, 0.45),
+      0 2px 0 #3a2a00;
+  }
+
+  [data-accent="cyan"] .nameplate-stamp {
+    background: linear-gradient(180deg, #c8ffff 0%, #00d5de 48%, #007a82 100%);
+  }
+
+  [data-accent="magenta"] .nameplate-stamp {
+    background: linear-gradient(180deg, #ffc1e8 0%, #ff00aa 48%, #9b0068 100%);
+    color: #fff4fb;
+  }
+
+  .score-ticket {
+    background:
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 10px,
+        rgba(255, 255, 255, 0.04) 10px,
+        rgba(255, 255, 255, 0.04) 11px
+      ),
+      linear-gradient(180deg, rgba(34, 30, 58, 0.92), rgba(23, 20, 40, 0.88));
+  }
+
+  .score-ticket::before {
+    content: "";
+    position: absolute;
+    left: -7px;
+    top: 12px;
+    bottom: 12px;
+    width: 14px;
+    background-image: radial-gradient(circle, #171428 5px, transparent 6px);
+    background-size: 14px 18px;
+    background-repeat: repeat-y;
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: inline-block;
+  min-width: 200%;
+  animation: marquee 28s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .scanlines::after {
     display: none;
+  }
+
+  .animate-marquee {
+    animation: none;
   }
 
   *,
@@ -198,12 +268,5 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
-  }
-
-  ::view-transition-old(*),
-  ::view-transition-new(*),
-  ::view-transition-group(*) {
-    animation-duration: 0s !important;
-    animation-delay: 0s !important;
   }
 }
