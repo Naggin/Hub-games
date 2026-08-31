@@ -12,6 +12,30 @@ import {
   getUserStats,
 } from "@/lib/games/queries";
 
+function toPosterProps(game: BrowseGame) {
+  return {
+    slug: game.slug,
+    title: game.title,
+    coverUrl: game.coverUrl,
+    synopsis: game.synopsis,
+    pitch: game.pitch,
+    posterUrl: game.posterUrl,
+    releaseYear: game.releaseYear,
+    communityScore: game.communityScore,
+    personalScore: game.personalScore ?? game.userEntry?.personalScore,
+    communityTake: game.communityTake,
+    monetization: game.monetization,
+    status: game.status ?? game.userEntry?.status,
+    genres: game.genres,
+  };
+}
+
+function shelfByStatus(games: BrowseGame[], status: LibraryStatus) {
+  return games.filter(
+    (game) => (game.status ?? game.userEntry?.status) === status,
+  );
+}
+
 function toBrowseGame(
   game: {
     id: string;
@@ -107,6 +131,26 @@ export default async function HubPage({
   const rows = buildCatalogRows(games, playing);
   const continuar = rows.find((row) => row.id === "continuar");
   const rest = rows.filter((row) => row.id !== "continuar");
+  const prideRows = [
+    {
+      id: "platinas",
+      cabinet: "TROPHY",
+      title: "Suas platinas",
+      games: shelfByStatus(games, "platinum"),
+    },
+    {
+      id: "zerados",
+      cabinet: "CLEAR",
+      title: "Zerados",
+      games: shelfByStatus(games, "beaten"),
+    },
+    {
+      id: "backlog",
+      cabinet: "1 UP",
+      title: "Backlog",
+      games: shelfByStatus(games, "wishlist"),
+    },
+  ].filter((row) => row.games.length > 0);
   const allGenres = Array.from(
     new Set(games.flatMap((game) => game.genres)),
   ).slice(0, 12);
@@ -157,21 +201,7 @@ export default async function HubPage({
             id={continuar.id}
             cabinet={continuar.cabinet}
             title={continuar.title}
-            games={continuar.games.map((game) => ({
-              slug: game.slug,
-              title: game.title,
-              coverUrl: game.coverUrl,
-              synopsis: game.synopsis,
-              pitch: game.pitch,
-              posterUrl: game.posterUrl,
-              releaseYear: game.releaseYear,
-              communityScore: game.communityScore,
-              personalScore: game.personalScore ?? game.userEntry?.personalScore,
-              communityTake: game.communityTake,
-              monetization: game.monetization,
-              status: game.status ?? game.userEntry?.status,
-              genres: game.genres,
-            }))}
+            games={continuar.games.map(toPosterProps)}
           />
         )}
 
@@ -183,27 +213,22 @@ export default async function HubPage({
           initialGenre={params.genre ?? ""}
           initialMonetization={params.monetization ?? ""}
         >
+          {prideRows.map((row) => (
+            <CatalogRow
+              key={row.id}
+              id={row.id}
+              cabinet={row.cabinet}
+              title={row.title}
+              games={row.games.map(toPosterProps)}
+            />
+          ))}
           {rest.map((row) => (
             <CatalogRow
               key={row.id}
               id={row.id}
               cabinet={row.cabinet}
               title={row.title}
-              games={row.games.map((game) => ({
-                slug: game.slug,
-                title: game.title,
-                coverUrl: game.coverUrl,
-                synopsis: game.synopsis,
-                pitch: game.pitch,
-                posterUrl: game.posterUrl,
-                releaseYear: game.releaseYear,
-                communityScore: game.communityScore,
-                personalScore: game.personalScore ?? game.userEntry?.personalScore,
-                communityTake: game.communityTake,
-                monetization: game.monetization,
-                status: game.status ?? game.userEntry?.status,
-                genres: game.genres,
-              }))}
+              games={row.games.map(toPosterProps)}
             />
           ))}
         </CabinetSearch>
