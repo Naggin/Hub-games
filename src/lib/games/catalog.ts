@@ -1,3 +1,11 @@
+import {
+  formatLongPitch,
+  getSpoilerFreeSummary,
+  type SpoilerFreeSummary,
+} from "@/lib/games/spoiler-free";
+
+export type { SpoilerFreeSummary };
+
 export type MonetizationKind = "fair" | "cosmetics" | "gacha" | "pay_to_win";
 
 export const MONETIZATION_LABELS: Record<MonetizationKind, string> = {
@@ -11,6 +19,8 @@ export type CatalogOverlay = {
   pitch?: string;
   communityTake?: string;
   monetization?: MonetizationKind;
+  /** Optional inline override; flagship copy lives in spoiler-free.ts. */
+  summary?: SpoilerFreeSummary;
 };
 
 export type CatalogIdentity = {
@@ -20,6 +30,8 @@ export type CatalogIdentity = {
   monetizationLabel: string;
   posterUrl: string;
   backdropUrl: string;
+  summary: SpoilerFreeSummary;
+  longPitch: string;
 };
 
 type CatalogGameInput = {
@@ -540,16 +552,31 @@ export function getCatalogIdentity(game: CatalogGameInput): CatalogIdentity {
   const overlay = CATALOG_BY_SLUG[game.slug] ?? {};
   const monetization = inferMonetization(game.slug, game.genres);
   const appId = game.steamAppId && game.steamAppId > 0 ? game.steamAppId : null;
+  const pitch = overlay.pitch ?? firstSentence(game.synopsis);
+  const communityTake =
+    overlay.communityTake ??
+    inferCommunityTake(monetization, game.communityScore);
+  const summary =
+    overlay.summary ??
+    getSpoilerFreeSummary({
+      slug: game.slug,
+      title: game.title,
+      synopsis: game.synopsis,
+      genres: game.genres,
+      pitch,
+      communityTake,
+      monetization,
+    });
 
   return {
-    pitch: overlay.pitch ?? firstSentence(game.synopsis),
-    communityTake:
-      overlay.communityTake ??
-      inferCommunityTake(monetization, game.communityScore),
+    pitch,
+    communityTake,
     monetization,
     monetizationLabel: MONETIZATION_LABELS[monetization],
     posterUrl: appId ? steamAsset(appId, "poster") : game.coverUrl,
     backdropUrl: appId ? steamAsset(appId, "hero") : game.coverUrl,
+    summary,
+    longPitch: formatLongPitch(summary),
   };
 }
 

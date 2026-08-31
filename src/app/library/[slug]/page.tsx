@@ -92,6 +92,7 @@ export default async function GameDetailPage({
         <GameIntel
           pitch={pitch}
           synopsis={game.synopsis}
+          summary={intel.summary}
           communityScore={communityScore}
           communityReviewCount={communityReviewCount}
           communityTake={communityTake}

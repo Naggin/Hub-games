@@ -1,5 +1,13 @@
 import { enrichGame, type Monetization } from "@/lib/games/catalog";
 import { seedGames } from "@/lib/games/seed-data";
+import {
+  clampPinned,
+  defaultPlayerProfile,
+  sanitizeGenres,
+  type PlayerProfile,
+  type ProfileAccent,
+  type ProfilePatch,
+} from "@/lib/profile/types";
 
 const mockLibrary = new Map<
   string,
@@ -16,13 +24,15 @@ const mockNotes = new Map<
   { userId: string; score: number; body: string }[]
 >();
 
+const mockProfiles = new Map<string, PlayerProfile>();
+
 let mockInitialized = false;
 
 function ensureMockLibrary(userId: string) {
   if (mockInitialized) return;
   mockInitialized = true;
 
-  mockLibrary.set(`${userId}:${seedGames[0].slug}`, {
+  mockLibrary.set(`${userId}:the-witcher-3-wild-hunt`, {
     status: "playing",
     personalScore: 9,
     hoursPlayed: 48,
@@ -37,18 +47,83 @@ function ensureMockLibrary(userId: string) {
     personalScore: 10,
     hoursPlayed: 67,
   });
-  mockLibrary.set(`${userId}:${seedGames[1].slug}`, {
+  mockLibrary.set(`${userId}:elden-ring`, {
     status: "platinum",
     personalScore: 10,
     hoursPlayed: 120,
   });
-  mockLibrary.set(`${userId}:${seedGames[2].slug}`, {
+  mockLibrary.set(`${userId}:red-dead-redemption-2`, {
     status: "beaten",
     personalScore: 8,
     hoursPlayed: 54,
   });
   mockLibrary.set(`${userId}:hades`, {
     status: "wishlist",
+  });
+  mockLibrary.set(`${userId}:hollow-knight`, {
+    status: "platinum",
+    personalScore: 10,
+    hoursPlayed: 62,
+  });
+  mockLibrary.set(`${userId}:celeste`, {
+    status: "platinum",
+    personalScore: 10,
+    hoursPlayed: 18,
+  });
+  mockLibrary.set(`${userId}:god-of-war`, {
+    status: "beaten",
+    personalScore: 9,
+    hoursPlayed: 31,
+  });
+  mockLibrary.set(`${userId}:stardew-valley`, {
+    status: "beaten",
+    personalScore: 9,
+    hoursPlayed: 86,
+  });
+  mockLibrary.set(`${userId}:portal-2`, {
+    status: "beaten",
+    personalScore: 10,
+    hoursPlayed: 12,
+  });
+  mockLibrary.set(`${userId}:starfield`, {
+    status: "dropped",
+    personalScore: 4,
+    hoursPlayed: 19,
+    shortNote: "O vazio venceu.",
+  });
+  mockLibrary.set(`${userId}:payday-2`, {
+    status: "dropped",
+    personalScore: 3,
+    hoursPlayed: 8,
+    shortNote: "DLC demais, poder pago.",
+  });
+  mockLibrary.set(`${userId}:pokemon-scarlet-violet`, {
+    status: "dropped",
+    personalScore: 5,
+    hoursPlayed: 14,
+  });
+
+  mockProfiles.set(userId, {
+    ...defaultPlayerProfile(userId),
+    displayName: "Arcade Kid",
+    nameplate: "KID 1P",
+    bio: "Voltei do trampo. Platina no fim de semana, drop sem culpa.",
+    favoriteGenres: ["RPG", "Soulslike", "Indie"],
+    accent: "gold",
+    pinnedSlugs: [
+      "elden-ring",
+      "hollow-knight",
+      "red-dead-redemption-2",
+      "god-of-war",
+    ],
+    platinumRank: ["elden-ring", "hollow-knight", "celeste"],
+    beatenRank: [
+      "portal-2",
+      "god-of-war",
+      "red-dead-redemption-2",
+      "stardew-valley",
+    ],
+    worstRank: ["payday-2", "starfield", "pokemon-scarlet-violet"],
   });
 }
 
@@ -118,6 +193,10 @@ export function getMockUserStats(userId: string) {
   const entries = [...mockLibrary.entries()].filter(([key]) =>
     key.startsWith(`${userId}:`),
   );
+  const hours = entries.reduce(
+    (sum, [, entry]) => sum + (entry.hoursPlayed ?? 0),
+    0,
+  );
 
   return {
     total: entries.length,
@@ -127,7 +206,8 @@ export function getMockUserStats(userId: string) {
     ).length,
     platinum: entries.filter(([, e]) => e.status === "platinum").length,
     wishlist: entries.filter(([, e]) => e.status === "wishlist").length,
-    hours: 311,
+    dropped: entries.filter(([, e]) => e.status === "dropped").length,
+    hours: Math.round(hours),
     currentlyPlaying: entries
       .filter(([, e]) => e.status === "playing")
       .map(([key]) => key.split(":")[1]),
@@ -157,10 +237,59 @@ export function updateMockLibraryStatus(
   slug: string,
   status: "wishlist" | "playing" | "beaten" | "platinum" | "dropped",
 ) {
+  const current = mockLibrary.get(`${userId}:${slug}`);
   mockLibrary.set(`${userId}:${slug}`, {
     status,
-    personalScore: mockLibrary.get(`${userId}:${slug}`)?.personalScore ?? null,
+    personalScore: current?.personalScore ?? null,
+    hoursPlayed: current?.hoursPlayed ?? null,
+    shortNote: current?.shortNote ?? null,
   });
+}
+
+export function getMockPlayerProfile(userId: string): PlayerProfile {
+  ensureMockLibrary(userId);
+  return mockProfiles.get(userId) ?? defaultPlayerProfile(userId);
+}
+
+export function updateMockPlayerProfile(
+  userId: string,
+  patch: ProfilePatch,
+): PlayerProfile {
+  ensureMockLibrary(userId);
+  const current = mockProfiles.get(userId) ?? defaultPlayerProfile(userId);
+  const next: PlayerProfile = {
+    ...current,
+    ...patch,
+    displayName:
+      patch.displayName?.trim().slice(0, 32) || current.displayName,
+    nameplate:
+      patch.nameplate != null
+        ? patch.nameplate.trim().slice(0, 16).toUpperCase() || current.nameplate
+        : current.nameplate,
+    bio:
+      patch.bio != null ? patch.bio.trim().slice(0, 180) : current.bio,
+    favoriteGenres: patch.favoriteGenres
+      ? sanitizeGenres(patch.favoriteGenres)
+      : current.favoriteGenres,
+    accent: isAccent(patch.accent) ? patch.accent : current.accent,
+    pinnedSlugs: patch.pinnedSlugs
+      ? clampPinned(patch.pinnedSlugs)
+      : current.pinnedSlugs,
+    platinumRank: uniqueSlugs(patch.platinumRank ?? current.platinumRank),
+    beatenRank: uniqueSlugs(patch.beatenRank ?? current.beatenRank),
+    worstRank: uniqueSlugs(patch.worstRank ?? current.worstRank),
+    updatedAt: new Date(),
+  };
+  mockProfiles.set(userId, next);
+  return next;
+}
+
+function uniqueSlugs(slugs: string[]) {
+  return [...new Set(slugs.filter(Boolean))];
+}
+
+function isAccent(value: unknown): value is ProfileAccent {
+  return value === "cyan" || value === "magenta" || value === "gold";
 }
 
 export function upsertMockCommunityNote(

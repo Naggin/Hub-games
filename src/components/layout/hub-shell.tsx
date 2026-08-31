@@ -20,6 +20,7 @@ const links = [
   { href: "/hub", label: "Hub", icon: Home },
   { href: "/hub#continuar", label: "Continuar jogando", icon: Gamepad2 },
   { href: "/library", label: "Biblioteca", icon: Library },
+  { href: "/perfil", label: "Perfil", icon: User },
 ];
 
 function useDevBypass() {
@@ -112,9 +113,13 @@ export function HubShell({
           </nav>
 
           {devBypass ? (
-            <div className="flex size-8 items-center justify-center rounded-full border border-neon-gold/40 bg-neon-gold/10">
+            <Link
+              href="/perfil"
+              aria-label="Perfil"
+              className="flex size-8 items-center justify-center rounded-full border border-neon-gold/40 bg-neon-gold/10 hover:bg-neon-gold/20"
+            >
               <User className="size-4 text-neon-gold" />
-            </div>
+            </Link>
           ) : (
             <UserButton
               appearance={{
@@ -148,7 +153,9 @@ export function HubShell({
               )}
             >
               <Icon className="size-4" />
-              {label === "Continuar jogando" ? "Continuar" : label}
+              {label === "Continuar jogando"
+                ? "Continuar"
+                : label}
             </Link>
           ))}
           <CompanionTrigger mobile />

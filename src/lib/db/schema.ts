@@ -78,7 +78,29 @@ export const communityNotes = pgTable(
   ],
 );
 
+export const profileAccentEnum = pgEnum("profile_accent", [
+  "cyan",
+  "magenta",
+  "gold",
+]);
+
+export const playerProfiles = pgTable("player_profiles", {
+  userId: text("user_id").primaryKey(),
+  displayName: text("display_name").notNull(),
+  nameplate: text("nameplate").notNull().default("1P"),
+  bio: text("bio").notNull().default(""),
+  favoriteGenres: text("favorite_genres").array().notNull().default([]),
+  accent: profileAccentEnum("accent").notNull().default("cyan"),
+  pinnedSlugs: text("pinned_slugs").array().notNull().default([]),
+  platinumRank: text("platinum_rank").array().notNull().default([]),
+  beatenRank: text("beaten_rank").array().notNull().default([]),
+  worstRank: text("worst_rank").array().notNull().default([]),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export type Game = typeof games.$inferSelect;
 export type LibraryEntry = typeof libraryEntries.$inferSelect;
 export type CommunityNote = typeof communityNotes.$inferSelect;
 export type LibraryStatus = (typeof libraryStatusEnum.enumValues)[number];
+export type PlayerProfileRow = typeof playerProfiles.$inferSelect;
+export type ProfileAccent = (typeof profileAccentEnum.enumValues)[number];

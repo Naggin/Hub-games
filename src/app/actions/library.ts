@@ -30,6 +30,7 @@ export async function updateLibraryStatusAction(
   revalidatePath("/hub");
   revalidatePath("/library");
   revalidatePath(`/library/${slug}`);
+  revalidatePath("/perfil");
 }
 
 export async function updatePersonalScoreAction(
@@ -62,6 +63,7 @@ export async function updatePersonalScoreAction(
   revalidatePath("/hub");
   revalidatePath("/library");
   revalidatePath(`/library/${slug}`);
+  revalidatePath("/perfil");
 }
 
 export async function submitCommunityNoteAction(
@@ -75,4 +77,5 @@ export async function submitCommunityNoteAction(
   revalidatePath("/library");
   revalidatePath(`/library/${slug}`);
   revalidatePath("/hub");
+  revalidatePath("/perfil");
 }

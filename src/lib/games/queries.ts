@@ -5,11 +5,20 @@ import {
   communityNotes,
   games,
   libraryEntries,
+  playerProfiles,
   type LibraryStatus,
 } from "@/lib/db/schema";
 import { enrichGame, type Monetization } from "@/lib/games/catalog";
 import { isMockDbEnabled } from "@/lib/games/mock-data";
 import * as mock from "@/lib/games/mock-data";
+import {
+  clampPinned,
+  defaultPlayerProfile,
+  sanitizeGenres,
+  type PlayerProfile,
+  type ProfileAccent,
+  type ProfilePatch,
+} from "@/lib/profile/types";
 
 export type GameWithStats = {
   id: string;
@@ -31,6 +40,13 @@ export type GameWithStats = {
   pitch: string;
   posterUrl: string;
   backdropUrl: string;
+  summary: {
+    premise: string;
+    howYouPlay: string;
+    whoItsFor: string;
+    communityTalks: string;
+  };
+  longPitch: string;
   userEntry: {
     status: LibraryStatus;
     personalScore: number | null;
@@ -215,7 +231,19 @@ export async function getUserLibrary(userId: string) {
     .orderBy(desc(libraryEntries.updatedAt));
 }
 
-export async function getUserStats(userId: string) {
+export type UserPrideStats = {
+  total: number;
+  playing: number;
+  beaten: number;
+  platinum: number;
+  wishlist: number;
+  dropped: number;
+  hours: number;
+};
+
+export async function getUserStats(userId: string): Promise<
+  UserPrideStats & { currentlyPlaying: unknown }
+> {
   if (isMockDbEnabled()) return mock.getMockUserStats(userId);
 
   const db = getDb();
@@ -231,6 +259,7 @@ export async function getUserStats(userId: string) {
   );
   const platinum = entries.filter((e) => e.status === "platinum");
   const wishlist = entries.filter((e) => e.status === "wishlist");
+  const dropped = entries.filter((e) => e.status === "dropped");
   const hours = entries.reduce((sum, e) => sum + (e.hoursPlayed ?? 0), 0);
 
   return {
@@ -239,6 +268,7 @@ export async function getUserStats(userId: string) {
     beaten: beaten.length,
     platinum: platinum.length,
     wishlist: wishlist.length,
+    dropped: dropped.length,
     hours: Math.round(hours),
     currentlyPlaying: playing.slice(0, 6),
   };
@@ -524,4 +554,205 @@ export async function upsertGameFromRawg(data: {
     .returning();
 
   return game;
+}
+
+function isAccent(value: unknown): value is ProfileAccent {
+  return value === "cyan" || value === "magenta" || value === "gold";
+}
+
+function rowToProfile(
+  userId: string,
+  row: typeof playerProfiles.$inferSelect | undefined,
+): PlayerProfile {
+  if (!row) return defaultPlayerProfile(userId);
+  return {
+    userId: row.userId,
+    displayName: row.displayName,
+    nameplate: row.nameplate || "1P",
+    bio: row.bio,
+    favoriteGenres: row.favoriteGenres ?? [],
+    accent: isAccent(row.accent) ? row.accent : "cyan",
+    pinnedSlugs: row.pinnedSlugs ?? [],
+    platinumRank: row.platinumRank ?? [],
+    beatenRank: row.beatenRank ?? [],
+    worstRank: row.worstRank ?? [],
+    updatedAt: row.updatedAt,
+  };
+}
+
+export async function getPlayerProfile(userId: string): Promise<PlayerProfile> {
+  if (isMockDbEnabled()) return mock.getMockPlayerProfile(userId);
+
+  const db = getDb();
+  const [row] = await db
+    .select()
+    .from(playerProfiles)
+    .where(eq(playerProfiles.userId, userId))
+    .limit(1);
+
+  return rowToProfile(userId, row);
+}
+
+export async function updatePlayerProfile(
+  userId: string,
+  patch: ProfilePatch,
+): Promise<PlayerProfile> {
+  if (isMockDbEnabled()) {
+    return mock.updateMockPlayerProfile(userId, patch);
+  }
+
+  const current = await getPlayerProfile(userId);
+  const next: PlayerProfile = {
+    ...current,
+    displayName:
+      patch.displayName?.trim().slice(0, 32) || current.displayName,
+    nameplate:
+      patch.nameplate != null
+        ? patch.nameplate.trim().slice(0, 16).toUpperCase() || current.nameplate
+        : current.nameplate,
+    bio: patch.bio != null ? patch.bio.trim().slice(0, 180) : current.bio,
+    favoriteGenres: patch.favoriteGenres
+      ? sanitizeGenres(patch.favoriteGenres)
+      : current.favoriteGenres,
+    accent: isAccent(patch.accent) ? patch.accent : current.accent,
+    pinnedSlugs: patch.pinnedSlugs
+      ? clampPinned(patch.pinnedSlugs)
+      : current.pinnedSlugs,
+    platinumRank: uniqueSlugs(patch.platinumRank ?? current.platinumRank),
+    beatenRank: uniqueSlugs(patch.beatenRank ?? current.beatenRank),
+    worstRank: uniqueSlugs(patch.worstRank ?? current.worstRank),
+    updatedAt: new Date(),
+  };
+
+  const db = getDb();
+  await db
+    .insert(playerProfiles)
+    .values({
+      userId,
+      displayName: next.displayName,
+      nameplate: next.nameplate,
+      bio: next.bio,
+      favoriteGenres: next.favoriteGenres,
+      accent: next.accent,
+      pinnedSlugs: next.pinnedSlugs,
+      platinumRank: next.platinumRank,
+      beatenRank: next.beatenRank,
+      worstRank: next.worstRank,
+      updatedAt: next.updatedAt,
+    })
+    .onConflictDoUpdate({
+      target: playerProfiles.userId,
+      set: {
+        displayName: next.displayName,
+        nameplate: next.nameplate,
+        bio: next.bio,
+        favoriteGenres: next.favoriteGenres,
+        accent: next.accent,
+        pinnedSlugs: next.pinnedSlugs,
+        platinumRank: next.platinumRank,
+        beatenRank: next.beatenRank,
+        worstRank: next.worstRank,
+        updatedAt: next.updatedAt,
+      },
+    });
+
+  return next;
+}
+
+function uniqueSlugs(slugs: string[]) {
+  return [...new Set(slugs.filter(Boolean))];
+}
+
+export type RankedGame = {
+  slug: string;
+  title: string;
+  coverUrl: string;
+  posterUrl: string;
+  personalScore: number | null;
+  communityScore: number | null;
+  status: LibraryStatus | null;
+};
+
+export async function getProfileCabinet(userId: string) {
+  const [profile, gamesList, stats] = await Promise.all([
+    getPlayerProfile(userId),
+    getGamesWithStats(userId, { limit: 200 }),
+    getUserStats(userId),
+  ]);
+
+  const bySlug = new Map(gamesList.map((game) => [game.slug, game]));
+
+  function resolveList(slugs: string[]): RankedGame[] {
+    return slugs
+      .map((slug) => bySlug.get(slug))
+      .filter((game): game is NonNullable<typeof game> => Boolean(game))
+      .map((game) => ({
+        slug: game.slug,
+        title: game.title,
+        coverUrl: game.coverUrl,
+        posterUrl: game.posterUrl,
+        personalScore: game.userEntry?.personalScore ?? null,
+        communityScore: game.communityScore,
+        status: game.userEntry?.status ?? null,
+      }));
+  }
+
+  const library = gamesList.filter((game) => game.userEntry);
+  const platinumEligible = library.filter(
+    (game) => game.userEntry?.status === "platinum",
+  );
+  const beatenEligible = library.filter((game) =>
+    ["beaten", "platinum"].includes(game.userEntry?.status ?? ""),
+  );
+  const worstEligible = library.filter((game) => {
+    const status = game.userEntry?.status;
+    const score = game.userEntry?.personalScore;
+    if (status === "dropped") return true;
+    if (score != null && score <= 5) return true;
+    return Boolean(game.userEntry);
+  });
+
+  const showcase = beatenEligible.map((game) => ({
+    slug: game.slug,
+    title: game.title,
+    coverUrl: game.coverUrl,
+    posterUrl: game.posterUrl,
+    status: game.userEntry?.status ?? null,
+    personalScore: game.userEntry?.personalScore ?? null,
+    communityScore: game.communityScore,
+  }));
+
+  const pinned = resolveList(profile.pinnedSlugs);
+
+  const genrePool = [
+    ...new Set(gamesList.flatMap((game) => game.genres)),
+  ].sort((a, b) => a.localeCompare(b, "pt-BR"));
+
+  return {
+    profile,
+    stats,
+    games: gamesList,
+    genrePool,
+    pinned,
+    showcase,
+    ranks: {
+      platinum: resolveList(profile.platinumRank),
+      beaten: resolveList(profile.beatenRank),
+      worst: resolveList(profile.worstRank),
+    },
+    candidates: {
+      platinum: platinumEligible
+        .filter((game) => !profile.platinumRank.includes(game.slug))
+        .map((game) => ({ slug: game.slug, title: game.title })),
+      beaten: beatenEligible
+        .filter((game) => !profile.beatenRank.includes(game.slug))
+        .map((game) => ({ slug: game.slug, title: game.title })),
+      worst: worstEligible
+        .filter((game) => !profile.worstRank.includes(game.slug))
+        .map((game) => ({ slug: game.slug, title: game.title })),
+      pinned: library
+        .filter((game) => !profile.pinnedSlugs.includes(game.slug))
+        .map((game) => ({ slug: game.slug, title: game.title })),
+    },
+  };
 }
