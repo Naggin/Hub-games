@@ -1,4 +1,4 @@
-import { and, avg, count, desc, eq, ilike, or } from "drizzle-orm";
+import { and, avg, count, desc, eq, ilike, inArray, or } from "drizzle-orm";
 
 import { getDb } from "@/lib/db";
 import {
@@ -10,6 +10,7 @@ import {
 } from "@/lib/db/schema";
 import { enrichGame, type Monetization } from "@/lib/games/catalog";
 import type { GameFicha } from "@/lib/games/ficha";
+import { isSteamApiConfigured } from "@/lib/env";
 import { isMockDbEnabled } from "@/lib/games/mock-data";
 import * as mock from "@/lib/games/mock-data";
 import {
@@ -20,6 +21,12 @@ import {
   type ProfileAccent,
   type ProfilePatch,
 } from "@/lib/profile/types";
+import { getSteamLink, setSteamLink } from "@/lib/steam/links";
+import type {
+  CatalogSteamGame,
+  ExistingLibraryRow,
+  ImportPlanItem,
+} from "@/lib/steam/sync";
 
 export type GameWithStats = {
   id: string;
@@ -594,12 +601,24 @@ function rowToProfile(
     platinumRank: row.platinumRank ?? [],
     beatenRank: row.beatenRank ?? [],
     worstRank: row.worstRank ?? [],
+    steamId: row.steamId ?? null,
     updatedAt: row.updatedAt,
   };
 }
 
+function withSteamOverlay(profile: PlayerProfile): PlayerProfile {
+  const overlay = getSteamLink(profile.userId);
+  if (!overlay) return profile;
+  return {
+    ...profile,
+    steamId: overlay.steamId,
+  };
+}
+
 export async function getPlayerProfile(userId: string): Promise<PlayerProfile> {
-  if (isMockDbEnabled()) return mock.getMockPlayerProfile(userId);
+  if (isMockDbEnabled()) {
+    return withSteamOverlay(mock.getMockPlayerProfile(userId));
+  }
 
   const db = getDb();
   const [row] = await db
@@ -608,7 +627,7 @@ export async function getPlayerProfile(userId: string): Promise<PlayerProfile> {
     .where(eq(playerProfiles.userId, userId))
     .limit(1);
 
-  return rowToProfile(userId, row);
+  return withSteamOverlay(rowToProfile(userId, row));
 }
 
 export async function updatePlayerProfile(
@@ -616,6 +635,9 @@ export async function updatePlayerProfile(
   patch: ProfilePatch,
 ): Promise<PlayerProfile> {
   if (isMockDbEnabled()) {
+    if (patch.steamId !== undefined) {
+      setSteamLink(userId, { steamId: patch.steamId });
+    }
     return mock.updateMockPlayerProfile(userId, patch);
   }
 
@@ -639,8 +661,13 @@ export async function updatePlayerProfile(
     platinumRank: uniqueSlugs(patch.platinumRank ?? current.platinumRank),
     beatenRank: uniqueSlugs(patch.beatenRank ?? current.beatenRank),
     worstRank: uniqueSlugs(patch.worstRank ?? current.worstRank),
+    steamId: patch.steamId !== undefined ? patch.steamId : current.steamId,
     updatedAt: new Date(),
   };
+
+  if (patch.steamId !== undefined) {
+    setSteamLink(userId, { steamId: patch.steamId });
+  }
 
   const db = getDb();
   await db
@@ -656,6 +683,7 @@ export async function updatePlayerProfile(
       platinumRank: next.platinumRank,
       beatenRank: next.beatenRank,
       worstRank: next.worstRank,
+      steamId: next.steamId,
       updatedAt: next.updatedAt,
     })
     .onConflictDoUpdate({
@@ -670,6 +698,7 @@ export async function updatePlayerProfile(
         platinumRank: next.platinumRank,
         beatenRank: next.beatenRank,
         worstRank: next.worstRank,
+        steamId: next.steamId,
         updatedAt: next.updatedAt,
       },
     });
@@ -679,6 +708,92 @@ export async function updatePlayerProfile(
 
 function uniqueSlugs(slugs: string[]) {
   return [...new Set(slugs.filter(Boolean))];
+}
+
+export async function getCatalogBySteamAppIds(
+  appIds: number[],
+): Promise<CatalogSteamGame[]> {
+  const unique = [...new Set(appIds.filter((id) => Number.isFinite(id)))];
+  if (unique.length === 0) return [];
+
+  if (isMockDbEnabled()) {
+    return mock.getMockGamesBySteamAppIds(unique).flatMap((game) =>
+      game.steamAppId == null
+        ? []
+        : [
+            {
+              id: game.id,
+              slug: game.slug,
+              title: game.title,
+              steamAppId: game.steamAppId,
+            },
+          ],
+    );
+  }
+
+  const db = getDb();
+  const rows = await db
+    .select({
+      id: games.id,
+      slug: games.slug,
+      title: games.title,
+      steamAppId: games.steamAppId,
+    })
+    .from(games)
+    .where(inArray(games.steamAppId, unique));
+
+  return rows.flatMap((row) =>
+    row.steamAppId == null
+      ? []
+      : [
+          {
+            id: row.id,
+            slug: row.slug,
+            title: row.title,
+            steamAppId: row.steamAppId,
+          },
+        ],
+  );
+}
+
+export async function getLibraryRowsForSteam(
+  userId: string,
+): Promise<ExistingLibraryRow[]> {
+  if (isMockDbEnabled()) {
+    return mock.listMockLibraryRows(userId).map((row) => ({
+      gameId: row.gameId,
+      status: row.status,
+      personalScore: row.personalScore,
+      hoursPlayed: row.hoursPlayed,
+      shortNote: row.shortNote,
+    }));
+  }
+
+  const db = getDb();
+  const rows = await db
+    .select({
+      gameId: libraryEntries.gameId,
+      status: libraryEntries.status,
+      personalScore: libraryEntries.personalScore,
+      hoursPlayed: libraryEntries.hoursPlayed,
+      shortNote: libraryEntries.shortNote,
+    })
+    .from(libraryEntries)
+    .where(eq(libraryEntries.userId, userId));
+
+  return rows;
+}
+
+export async function applySteamImportPlan(
+  userId: string,
+  items: ImportPlanItem[],
+) {
+  for (const item of items) {
+    await upsertLibraryEntry(userId, item.gameId, {
+      status: item.status,
+      hoursPlayed: item.hoursPlayed,
+    });
+  }
 }
 
 export type RankedGame = {
@@ -784,6 +899,8 @@ export async function getProfileCabinet(userId: string) {
     ...new Set(gamesList.flatMap((game) => game.genres)),
   ].sort((a, b) => a.localeCompare(b, "pt-BR"));
 
+  const overlay = getSteamLink(userId);
+
   return {
     profile,
     stats,
@@ -793,6 +910,11 @@ export async function getProfileCabinet(userId: string) {
     showcase,
     nowPlaying,
     backlog,
+    steam: {
+      steamId: profile.steamId,
+      demo: !isSteamApiConfigured(),
+      lastSyncedAt: overlay?.lastSyncedAt?.toISOString() ?? null,
+    },
     ranks: {
       platinum: platinumRanked,
       beaten: beatenRanked,

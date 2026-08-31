@@ -124,6 +124,7 @@ function ensureMockLibrary(userId: string) {
       "stardew-valley",
     ],
     worstRank: ["payday-2", "starfield", "pokemon-scarlet-violet"],
+    steamId: null,
   });
 }
 
@@ -237,6 +238,37 @@ export function getMockLibraryEntry(userId: string, slug: string) {
   return mockLibrary.get(`${userId}:${slug}`) ?? null;
 }
 
+export function getMockGamesBySteamAppIds(appIds: number[]) {
+  const wanted = new Set(appIds);
+  return getMockGames(200).filter(
+    (game) => game.steamAppId != null && wanted.has(game.steamAppId),
+  );
+}
+
+export function listMockLibraryRows(userId: string) {
+  ensureMockLibrary(userId);
+  const games = getMockGames(200);
+  const bySlug = new Map(games.map((game) => [game.slug, game]));
+
+  return [...mockLibrary.entries()]
+    .filter(([key]) => key.startsWith(`${userId}:`))
+    .flatMap(([key, entry]) => {
+      const slug = key.slice(userId.length + 1);
+      const game = bySlug.get(slug);
+      if (!game) return [];
+      return [
+        {
+          gameId: game.id,
+          slug: game.slug,
+          status: entry.status,
+          personalScore: entry.personalScore ?? null,
+          hoursPlayed: entry.hoursPlayed ?? null,
+          shortNote: entry.shortNote ?? null,
+        },
+      ];
+    });
+}
+
 export function updateMockLibraryStatus(
   userId: string,
   slug: string,
@@ -303,6 +335,7 @@ export function updateMockPlayerProfile(
     platinumRank: uniqueSlugs(patch.platinumRank ?? current.platinumRank),
     beatenRank: uniqueSlugs(patch.beatenRank ?? current.beatenRank),
     worstRank: uniqueSlugs(patch.worstRank ?? current.worstRank),
+    steamId: patch.steamId !== undefined ? patch.steamId : current.steamId,
     updatedAt: new Date(),
   };
   mockProfiles.set(userId, next);
