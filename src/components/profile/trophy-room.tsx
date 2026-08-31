@@ -47,7 +47,7 @@ export function TrophyRoom({ cabinet }: { cabinet: CabinetView }) {
     >
       <div className="pointer-events-none absolute inset-0 arcade-grid opacity-25" />
 
-            <div className="relative mx-auto max-w-[1440px] px-4 pb-28 pt-36 md:px-8 md:pt-32">
+      <div className="relative mx-auto max-w-[1440px] px-4 pb-28 pt-36 md:px-8 md:pt-32">
         <motion.header
           initial={reduce ? false : { opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
@@ -87,11 +87,13 @@ export function TrophyRoom({ cabinet }: { cabinet: CabinetView }) {
                 </span>
               ))}
             </div>
-            <dl className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <dl className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               <Stat label="Platinas" value={cabinet.stats.platinum} tone={style.text} />
               <Stat label="Zerados" value={cabinet.stats.beaten} tone="text-emerald-400" />
-              <Stat label="Piores" value={cabinet.ranks.worst.length} tone="text-neon-magenta" />
+              <Stat label="Jogando" value={cabinet.stats.playing ?? 0} tone="text-neon-cyan" />
+              <Stat label="Backlog" value={cabinet.stats.wishlist} tone="text-neon-magenta" />
               <Stat label="Horas" value={cabinet.stats.hours} tone="text-foreground" />
+              <Stat label="Piores" value={cabinet.stats.dropped} tone="text-neon-magenta" />
             </dl>
             <p className="mt-5 text-xs text-muted-foreground">
               Manda o print. É pra flexionar — 2 segundos e o amigo já entendeu.
@@ -205,6 +207,7 @@ function PinnedShrine({
               fallbackSrc={hero.coverUrl}
               alt={hero.title}
               fill
+              priority
               className="object-cover"
               sizes="280px"
             />
