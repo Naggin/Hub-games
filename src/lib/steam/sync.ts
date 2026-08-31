@@ -254,7 +254,11 @@ export async function resolveSteamId(identity: ParsedSteamIdentity): Promise<
 
 export async function fetchOwnedGames(steamId: string): Promise<
   | { ok: true; games: SteamOwnedGame[]; demo: false }
-  | { ok: false; error: "private_profile" | "steam_error" | "needs_key"; demo: false }
+  | {
+      ok: false;
+      error: "private_profile" | "steam_error" | "needs_key" | "rate_limited";
+      demo: false;
+    }
 > {
   const key = getSteamApiKey();
   if (!key) return { ok: false, error: "needs_key", demo: false };
@@ -314,7 +318,10 @@ export async function fetchOwnedGames(steamId: string): Promise<
     });
 
     return { ok: true, games, demo: false };
-  } catch {
+  } catch (error) {
+    if (error instanceof Error && error.message === "rate_limited") {
+      return { ok: false, error: "rate_limited", demo: false };
+    }
     return { ok: false, error: "steam_error", demo: false };
   }
 }
