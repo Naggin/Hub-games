@@ -232,17 +232,42 @@ export function getMockPlayingGames(userId: string) {
     }));
 }
 
+export function getMockLibraryEntry(userId: string, slug: string) {
+  ensureMockLibrary(userId);
+  return mockLibrary.get(`${userId}:${slug}`) ?? null;
+}
+
 export function updateMockLibraryStatus(
   userId: string,
   slug: string,
   status: "wishlist" | "playing" | "beaten" | "platinum" | "dropped",
 ) {
+  patchMockLibrary(userId, slug, { status });
+}
+
+export function patchMockLibrary(
+  userId: string,
+  slug: string,
+  patch: {
+    status?: "wishlist" | "playing" | "beaten" | "platinum" | "dropped";
+    personalScore?: number | null;
+    hoursPlayed?: number | null;
+    shortNote?: string | null;
+  },
+) {
   const current = mockLibrary.get(`${userId}:${slug}`);
   mockLibrary.set(`${userId}:${slug}`, {
-    status,
-    personalScore: current?.personalScore ?? null,
-    hoursPlayed: current?.hoursPlayed ?? null,
-    shortNote: current?.shortNote ?? null,
+    status: patch.status ?? current?.status ?? "wishlist",
+    personalScore:
+      patch.personalScore !== undefined
+        ? patch.personalScore
+        : (current?.personalScore ?? null),
+    hoursPlayed:
+      patch.hoursPlayed !== undefined
+        ? patch.hoursPlayed
+        : (current?.hoursPlayed ?? null),
+    shortNote:
+      patch.shortNote !== undefined ? patch.shortNote : (current?.shortNote ?? null),
   });
 }
 

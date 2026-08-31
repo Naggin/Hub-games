@@ -9,6 +9,7 @@ import {
   type LibraryStatus,
 } from "@/lib/db/schema";
 import { enrichGame, type Monetization } from "@/lib/games/catalog";
+import type { GameFicha } from "@/lib/games/ficha";
 import { isMockDbEnabled } from "@/lib/games/mock-data";
 import * as mock from "@/lib/games/mock-data";
 import {
@@ -47,6 +48,7 @@ export type GameWithStats = {
     communityTalks: string;
   };
   longPitch: string;
+  ficha: GameFicha;
   userEntry: {
     status: LibraryStatus;
     personalScore: number | null;
@@ -287,17 +289,18 @@ export async function upsertLibraryEntry(
   if (isMockDbEnabled()) {
     const game = mock.getMockGames(200).find((g) => g.id === gameId);
     if (game) {
-      mock.updateMockLibraryStatus(userId, game.slug, data.status);
+      mock.patchMockLibrary(userId, game.slug, data);
     }
+    const stored = game ? mock.getMockLibraryEntry(userId, game.slug) : null;
 
     return {
       id: `mock-${gameId}`,
       userId,
       gameId,
-      status: data.status,
-      personalScore: data.personalScore ?? null,
-      hoursPlayed: data.hoursPlayed ?? null,
-      shortNote: data.shortNote ?? null,
+      status: stored?.status ?? data.status,
+      personalScore: stored?.personalScore ?? null,
+      hoursPlayed: stored?.hoursPlayed ?? null,
+      shortNote: stored?.shortNote ?? null,
       startedAt: null,
       beatenAt: null,
       platinumAt: null,
@@ -308,6 +311,25 @@ export async function upsertLibraryEntry(
   const db = getDb();
   const now = new Date();
 
+  const [existing] = await db
+    .select()
+    .from(libraryEntries)
+    .where(
+      and(eq(libraryEntries.userId, userId), eq(libraryEntries.gameId, gameId)),
+    )
+    .limit(1);
+
+  const personalScore =
+    data.personalScore !== undefined
+      ? data.personalScore
+      : (existing?.personalScore ?? null);
+  const hoursPlayed =
+    data.hoursPlayed !== undefined
+      ? data.hoursPlayed
+      : (existing?.hoursPlayed ?? null);
+  const shortNote =
+    data.shortNote !== undefined ? data.shortNote : (existing?.shortNote ?? null);
+
   const timestamps: {
     startedAt?: Date;
     beatenAt?: Date | null;
@@ -315,16 +337,16 @@ export async function upsertLibraryEntry(
   } = {};
 
   if (data.status === "playing") {
-    timestamps.startedAt = now;
+    timestamps.startedAt = existing?.startedAt ?? now;
   }
 
   if (data.status === "beaten" || data.status === "platinum") {
-    timestamps.beatenAt = now;
+    timestamps.beatenAt = existing?.beatenAt ?? now;
   }
 
   if (data.status === "platinum") {
-    timestamps.platinumAt = now;
-    timestamps.beatenAt = now;
+    timestamps.platinumAt = existing?.platinumAt ?? now;
+    timestamps.beatenAt = existing?.beatenAt ?? now;
   }
 
   const [entry] = await db
@@ -333,9 +355,9 @@ export async function upsertLibraryEntry(
       userId,
       gameId,
       status: data.status,
-      personalScore: data.personalScore ?? null,
-      hoursPlayed: data.hoursPlayed ?? null,
-      shortNote: data.shortNote ?? null,
+      personalScore,
+      hoursPlayed,
+      shortNote,
       ...timestamps,
       updatedAt: now,
     })
@@ -343,15 +365,11 @@ export async function upsertLibraryEntry(
       target: [libraryEntries.userId, libraryEntries.gameId],
       set: {
         status: data.status,
-        personalScore: data.personalScore ?? null,
-        hoursPlayed: data.hoursPlayed ?? null,
-        shortNote: data.shortNote ?? null,
+        personalScore,
+        hoursPlayed,
+        shortNote,
         updatedAt: now,
-        ...(data.status === "playing" ? { startedAt: now } : {}),
-        ...(data.status === "beaten" || data.status === "platinum"
-          ? { beatenAt: now }
-          : {}),
-        ...(data.status === "platinum" ? { platinumAt: now } : {}),
+        ...timestamps,
       },
     })
     .returning();
@@ -703,6 +721,17 @@ export async function getProfileCabinet(userId: string) {
       .map(toRanked);
   }
 
+  function mergeRank(curated: RankedGame[], eligible: RankedGame[]) {
+    const seen = new Set<string>();
+    const merged: RankedGame[] = [];
+    for (const game of [...curated, ...eligible]) {
+      if (seen.has(game.slug)) continue;
+      seen.add(game.slug);
+      merged.push(game);
+    }
+    return merged;
+  }
+
   const library = gamesList.filter((game) => game.userEntry);
   const platinumEligible = library.filter(
     (game) => game.userEntry?.status === "platinum",
@@ -726,7 +755,30 @@ export async function getProfileCabinet(userId: string) {
     .filter((game) => game.userEntry?.status === "wishlist")
     .map(toRanked);
 
-  const pinned = resolveList(profile.pinnedSlugs);
+  const platinumRanked = mergeRank(
+    resolveList(profile.platinumRank),
+    platinumEligible.map(toRanked),
+  );
+  const beatenRanked = mergeRank(
+    resolveList(profile.beatenRank),
+    beatenEligible.map(toRanked),
+  );
+  const worstRanked = mergeRank(
+    resolveList(profile.worstRank),
+    worstEligible
+      .filter(
+        (game) =>
+          game.userEntry?.status === "dropped" ||
+          (game.userEntry?.personalScore != null &&
+            game.userEntry.personalScore <= 5),
+      )
+      .map(toRanked),
+  );
+  const pinnedResolved = resolveList(profile.pinnedSlugs);
+  const pinned =
+    pinnedResolved.length > 0
+      ? pinnedResolved
+      : [...platinumRanked, ...beatenRanked].slice(0, 4);
 
   const genrePool = [
     ...new Set(gamesList.flatMap((game) => game.genres)),
@@ -742,9 +794,9 @@ export async function getProfileCabinet(userId: string) {
     nowPlaying,
     backlog,
     ranks: {
-      platinum: resolveList(profile.platinumRank),
-      beaten: resolveList(profile.beatenRank),
-      worst: resolveList(profile.worstRank),
+      platinum: platinumRanked,
+      beaten: beatenRanked,
+      worst: worstRanked,
     },
     candidates: {
       platinum: platinumEligible
