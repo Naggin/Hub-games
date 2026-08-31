@@ -80,7 +80,7 @@ export function ArcadeSignIn() {
               HUB-GAMES
             </h1>
             <p className="mt-4 max-w-md text-sm text-muted-foreground">
-              Seu save universal. Biblioteca, progresso, platinas e notas da
+              Seu save universal. Progresso, platinas e notas da
               comunidade — tudo num cabinet neon.
             </p>
           </motion.div>
@@ -103,7 +103,7 @@ export function ArcadeSignIn() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="player@hub.games"
                     required
-                    className="border-neon-cyan/30 bg-void/50"
+                    className="border-neon-cyan/30 bg-secondary/50"
                   />
                 </div>
                 <div className="space-y-2">
@@ -115,7 +115,7 @@ export function ArcadeSignIn() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     required
-                    className="border-neon-cyan/30 bg-void/50"
+                    className="border-neon-cyan/30 bg-secondary/50"
                   />
                 </div>
 

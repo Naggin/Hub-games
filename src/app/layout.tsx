@@ -26,7 +26,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Hub-games | O hub arcade do gamer",
   description:
-    "Biblioteca de jogos, progresso zerou/platinou, notas da comunidade e companheiro IA.",
+    "O arcade do nerd gamer — vitrine de jogos, P2W na capa, notas da comunidade e companheiro IA.",
 };
 
 function AppShell({ children }: { children: React.ReactNode }) {
@@ -57,7 +57,7 @@ export default function RootLayout({
       appearance={{
         variables: {
           colorPrimary: "#00f5ff",
-          colorBackground: "#05040a",
+          colorBackground: "#171428",
         },
       }}
     >

@@ -1,7 +1,9 @@
-import Image from "next/image";
 import { notFound } from "next/navigation";
 
-import { CompanionCabinet } from "@/components/companion/companion-cabinet";
+import { CoverImage } from "@/components/browse/cover-image";
+import { FichaDossier } from "@/components/browse/ficha-dossier";
+import { GameIntel } from "@/components/browse/game-intel";
+import { MonetizationBadge } from "@/components/browse/monetization-badge";
 import { HubShell } from "@/components/layout/hub-shell";
 import { CommunityNoteForm } from "@/components/library/community-note-form";
 import { ProgressRitual } from "@/components/library/progress-ritual";
@@ -10,6 +12,8 @@ import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { getAuthUserId } from "@/lib/auth";
 import { formatScore } from "@/lib/constants";
+import { getCatalogIntel } from "@/lib/games/catalog";
+import { resolveGameFicha } from "@/lib/games/ficha";
 import { getGameWithFullDetails } from "@/lib/games/queries";
 
 export default async function GameDetailPage({
@@ -26,97 +30,134 @@ export default async function GameDetailPage({
 
   const { game, communityScore, communityReviewCount, userEntry, notes } = data;
   const userNote = notes.find((note) => note.userId === userId);
+  const intel = getCatalogIntel({
+    ...game,
+    communityScore,
+  });
+  const monetization =
+    "monetization" in game ? game.monetization : intel.monetization;
+  const communityTake =
+    "communityTake" in game ? game.communityTake : intel.communityTake;
+  const pitch = "pitch" in game ? game.pitch : intel.pitch;
+  const backdropUrl =
+    "backdropUrl" in game ? game.backdropUrl : intel.backdropUrl;
+  const ficha = resolveGameFicha({
+    slug: game.slug,
+    platforms: game.platforms,
+    steamAppId: game.steamAppId,
+    releaseYear: game.releaseYear,
+  });
 
   return (
-    <HubShell>
-      <div className="grid gap-8 lg:grid-cols-3">
-        <div className="space-y-8 lg:col-span-2">
-          <div className="relative aspect-[460/215] overflow-hidden rounded-2xl border border-neon-cyan/20">
-            <Image
-              src={game.coverUrl}
-              alt={game.title}
-              fill
-              className="object-cover"
-              priority
-              sizes="(max-width: 1024px) 100vw, 66vw"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-void via-void/20 to-transparent" />
-            <div className="absolute bottom-0 p-6">
-              <p className="font-pixel text-[10px] text-neon-cyan">FICHA DO JOGO</p>
-              <h1 className="mt-2 text-3xl font-semibold">{game.title}</h1>
-              {game.releaseYear && (
-                <p className="text-muted-foreground">{game.releaseYear}</p>
-              )}
-            </div>
-          </div>
+    <HubShell browse>
+      <section className="relative isolate min-h-[70vh] overflow-hidden border-b border-neon-cyan/20">
+        <CoverImage
+          src={backdropUrl || game.coverUrl}
+          fallbackSrc={game.coverUrl}
+          alt=""
+          fill
+          priority
+          className="object-cover object-center"
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-void/85 via-void/35 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-void/75 via-transparent to-void/20" />
+        <div className="scanlines pointer-events-none absolute inset-0 opacity-20" />
 
-          <Card className="border-neon-cyan/10 bg-card/50 p-6">
-            <p className="leading-relaxed text-muted-foreground">{game.synopsis}</p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {game.genres.map((genre) => (
-                <Badge key={genre} variant="secondary">
-                  {genre}
-                </Badge>
+        <div className="relative z-10 mx-auto flex min-h-[70vh] max-w-7xl flex-col justify-end px-4 pb-10 pt-28 md:px-8">
+          <p className="font-pixel text-[10px] text-neon-cyan text-glow-cyan">
+            FICHA DO CABINET
+          </p>
+          <h1 className="mt-2 text-4xl font-semibold tracking-tight md:text-5xl">
+            {game.title}
+          </h1>
+          <p className="mt-4 max-w-2xl text-lg text-foreground/90">{pitch}</p>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <MonetizationBadge monetization={monetization} />
+            {game.releaseYear && (
+              <Badge variant="outline" className="border-white/20 text-muted-foreground">
+                {game.releaseYear}
+              </Badge>
+            )}
+            {game.genres.map((genre) => (
+              <Badge key={genre} variant="secondary">
+                {genre}
+              </Badge>
+            ))}
+            {ficha.platforms.slice(0, 4).map((platform) => (
+              <Badge
+                key={platform}
+                variant="outline"
+                className="border-neon-cyan/30 text-neon-cyan"
+              >
+                {platform}
+              </Badge>
+            ))}
+          </div>
+          <p className="mt-4 text-sm">
+            Comunidade{" "}
+            <strong className="text-neon-cyan">{formatScore(communityScore)}</strong>
+            <span className="text-muted-foreground">
+              {" "}
+              · “{communityTake}”
+            </span>
+          </p>
+        </div>
+      </section>
+
+      <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 md:px-8">
+        <GameIntel
+          pitch={pitch}
+          synopsis={game.synopsis}
+          summary={intel.summary}
+          communityScore={communityScore}
+          communityReviewCount={communityReviewCount}
+          communityTake={communityTake}
+          monetization={monetization}
+          personalScore={userEntry?.personalScore}
+          metacritic={game.metacritic}
+          platforms={ficha.platforms}
+        />
+
+        <FichaDossier ficha={ficha} />
+
+        <ProgressRitual
+          gameId={game.id}
+          slug={game.slug}
+          currentStatus={userEntry?.status}
+        />
+
+        <Separator className="bg-neon-cyan/10" />
+
+        <CommunityNoteForm
+          gameId={game.id}
+          slug={game.slug}
+          existingScore={userNote?.score}
+          existingBody={userNote?.body}
+        />
+
+        {notes.length > 0 && (
+          <section className="space-y-4">
+            <h2 className="font-pixel text-[10px] text-neon-magenta">
+              NOTAS DA COMUNIDADE
+            </h2>
+            <div className="space-y-3">
+              {notes.slice(0, 8).map((note) => (
+                <Card
+                  key={note.id}
+                  className="border-neon-magenta/10 bg-card/70 p-4"
+                >
+                  <div className="mb-2 flex items-center justify-between text-sm">
+                    <span className="text-neon-magenta">
+                      Player • {note.score}/10
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{note.body}</p>
+                </Card>
               ))}
             </div>
-            <div className="mt-4 flex flex-wrap gap-4 text-sm">
-              <span>
-                Comunidade:{" "}
-                <strong className="text-neon-cyan">
-                  {formatScore(communityScore)}
-                </strong>{" "}
-                ({communityReviewCount} notas)
-              </span>
-              {game.metacritic && (
-                <span>
-                  Metacritic:{" "}
-                  <strong className="text-neon-gold">{game.metacritic}</strong>
-                </span>
-              )}
-              <span>
-                Plataformas: {game.platforms.slice(0, 4).join(", ")}
-              </span>
-            </div>
-          </Card>
-
-          <ProgressRitual
-            gameId={game.id}
-            slug={game.slug}
-            currentStatus={userEntry?.status}
-          />
-
-          <Separator className="bg-neon-cyan/10" />
-
-          <CommunityNoteForm
-            gameId={game.id}
-            slug={game.slug}
-            existingScore={userNote?.score}
-            existingBody={userNote?.body}
-          />
-
-          {notes.length > 0 && (
-            <section className="space-y-4">
-              <h2 className="text-lg font-semibold">Notas da comunidade</h2>
-              <div className="space-y-3">
-                {notes.slice(0, 8).map((note) => (
-                  <Card
-                    key={note.id}
-                    className="border-neon-magenta/10 bg-card/40 p-4"
-                  >
-                    <div className="mb-2 flex items-center justify-between text-sm">
-                      <span className="text-neon-magenta">
-                        Player • {note.score}/10
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{note.body}</p>
-                  </Card>
-                ))}
-              </div>
-            </section>
-          )}
-        </div>
-
-        <CompanionCabinet />
+          </section>
+        )}
       </div>
     </HubShell>
   );

@@ -46,7 +46,7 @@ export function CompanionCabinet() {
   const loading = status === "streaming" || status === "submitted";
 
   return (
-    <Card className="border-neon-cyan/20 bg-card/60 backdrop-blur">
+    <Card className="border-neon-cyan/20 bg-card/80 backdrop-blur">
       <div className="flex items-center gap-3 border-b border-neon-cyan/10 p-4">
         <div className="rounded-lg bg-neon-cyan/10 p-2">
           <Bot className="size-5 text-neon-cyan" />
@@ -120,7 +120,7 @@ export function CompanionCabinet() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="O que jogo hoje?"
-          className="flex-1 rounded-lg border border-neon-cyan/20 bg-void/50 px-3 py-2 text-sm outline-none focus:border-neon-cyan/50"
+          className="flex-1 rounded-lg border border-neon-cyan/20 bg-secondary/50 px-3 py-2 text-sm outline-none focus:border-neon-cyan/50"
         />
         <Button
           type="submit"
