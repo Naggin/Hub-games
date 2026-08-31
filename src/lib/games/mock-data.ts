@@ -1,3 +1,5 @@
+import { enrichGame, type Monetization } from "@/lib/games/catalog";
+import { withCatalogIdentity } from "@/lib/games/catalog";
 import { seedGames } from "@/lib/games/seed-data";
 
 const mockLibrary = new Map<
@@ -24,14 +26,30 @@ function ensureMockLibrary(userId: string) {
   mockLibrary.set(`${userId}:${seedGames[0].slug}`, {
     status: "playing",
     personalScore: 9,
+    hoursPlayed: 48,
+  });
+  mockLibrary.set(`${userId}:cyberpunk-2077`, {
+    status: "playing",
+    personalScore: 8,
+    hoursPlayed: 22,
+  });
+  mockLibrary.set(`${userId}:baldurs-gate-3`, {
+    status: "playing",
+    personalScore: 10,
+    hoursPlayed: 67,
   });
   mockLibrary.set(`${userId}:${seedGames[1].slug}`, {
     status: "platinum",
     personalScore: 10,
+    hoursPlayed: 120,
   });
   mockLibrary.set(`${userId}:${seedGames[2].slug}`, {
     status: "beaten",
     personalScore: 8,
+    hoursPlayed: 54,
+  });
+  mockLibrary.set(`${userId}:hades`, {
+    status: "wishlist",
   });
 }
 
@@ -40,19 +58,21 @@ export function isMockDbEnabled() {
 }
 
 export function getMockGames(limit = 48) {
-  return seedGames.slice(0, limit).map((game, index) => ({
-    id: `mock-${index}`,
-    slug: game.slug,
-    title: game.title,
-    synopsis: game.synopsis,
-    coverUrl: game.coverUrl,
-    releaseYear: game.releaseYear,
-    genres: game.genres,
-    platforms: game.platforms,
-    steamAppId: game.steamAppId,
-    rawgId: null,
-    metacritic: game.metacritic ?? null,
-  }));
+  return seedGames.slice(0, limit).map((game, index) =>
+    enrichGame({
+      id: `mock-${index}`,
+      slug: game.slug,
+      title: game.title,
+      synopsis: game.synopsis,
+      coverUrl: game.coverUrl,
+      releaseYear: game.releaseYear,
+      genres: game.genres,
+      platforms: game.platforms,
+      steamAppId: game.steamAppId,
+      rawgId: null,
+      metacritic: game.metacritic ?? null,
+    }),
+  );
 }
 
 export function getMockGamesWithStats(userId: string, limit = 48) {
@@ -62,12 +82,14 @@ export function getMockGamesWithStats(userId: string, limit = 48) {
     const entry = mockLibrary.get(`${userId}:${game.slug}`);
     const notes = mockNotes.get(game.slug) ?? [];
 
-    return {
+    const communityScore =
+      notes.length > 0
+        ? notes.reduce((sum, n) => sum + n.score, 0) / notes.length
+        : mockCommunityScore(game.slug, game.metacritic);
+
+    return withCatalogIdentity({
       ...game,
-      communityScore:
-        notes.length > 0
-          ? notes.reduce((sum, n) => sum + n.score, 0) / notes.length
-          : 8.5,
+      communityScore,
       communityReviewCount: notes.length || 12,
       userEntry: entry
         ? {
@@ -77,8 +99,14 @@ export function getMockGamesWithStats(userId: string, limit = 48) {
             shortNote: entry.shortNote ?? null,
           }
         : null,
-    };
+    });
   });
+}
+
+function mockCommunityScore(slug: string, metacritic: number | null) {
+  if (metacritic) return Math.min(10, Math.round((metacritic / 10) * 10) / 10);
+  const salt = slug.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return 7.4 + (salt % 22) / 10;
 }
 
 export function getMockGameBySlug(slug: string) {
@@ -100,7 +128,7 @@ export function getMockUserStats(userId: string) {
     ).length,
     platinum: entries.filter(([, e]) => e.status === "platinum").length,
     wishlist: entries.filter(([, e]) => e.status === "wishlist").length,
-    hours: 142,
+    hours: 311,
     currentlyPlaying: entries
       .filter(([, e]) => e.status === "playing")
       .map(([key]) => key.split(":")[1]),
@@ -153,23 +181,14 @@ export function getMockGameDetails(slug: string, userId: string) {
   if (!game) return null;
 
   const entry = mockLibrary.get(`${userId}:${slug}`);
-  const notes = mockNotes.get(slug) ?? [
-    {
-      userId: "community_1",
-      score: 9,
-      body: "Obra-prima. Vale cada hora.",
-    },
-    {
-      userId: "community_2",
-      score: 8,
-      body: "Platina exige paciência, mas recompensa.",
-    },
-  ];
+  const notes = mockNotes.get(slug) ?? defaultNotesFor(game.monetization);
+
+  const communityScore =
+    notes.reduce((sum, n) => sum + n.score, 0) / Math.max(notes.length, 1);
 
   return {
-    game,
-    communityScore:
-      notes.reduce((sum, n) => sum + n.score, 0) / Math.max(notes.length, 1),
+    game: withCatalogIdentity({ ...game, communityScore }),
+    communityScore,
     communityReviewCount: notes.length,
     userEntry: entry
       ? {
@@ -196,4 +215,64 @@ export function getMockGameDetails(slug: string, userId: string) {
       updatedAt: new Date(),
     })),
   };
+}
+
+function defaultNotesFor(monetization: Monetization) {
+  if (monetization === "gacha") {
+    return [
+      {
+        userId: "community_1",
+        score: 8,
+        body: "Mundo lindo. Só não entra achando que o banner é opcional.",
+      },
+      {
+        userId: "community_2",
+        score: 6,
+        body: "Gacha pesado. Dá pra ir F2P, mas o poder mora no caixa.",
+      },
+    ];
+  }
+
+  if (monetization === "pay_to_win") {
+    return [
+      {
+        userId: "community_1",
+        score: 7,
+        body: "Divertido até o ranked. Depois o pay to win aparece.",
+      },
+      {
+        userId: "community_2",
+        score: 5,
+        body: "Quem paga, avança. A comunidade não esconde isso.",
+      },
+    ];
+  }
+
+  if (monetization === "cosmetics") {
+    return [
+      {
+        userId: "community_1",
+        score: 8,
+        body: "Live service honesto: skin cara, poder não se compra.",
+      },
+      {
+        userId: "community_2",
+        score: 8,
+        body: "A galera tilt, a skill é grátis. Fair no competitivo.",
+      },
+    ];
+  }
+
+  return [
+    {
+      userId: "community_1",
+      score: 9,
+      body: "Obra-prima. Vale cada hora.",
+    },
+    {
+      userId: "community_2",
+      score: 8,
+      body: "Platina exige paciência, mas recompensa. Sem P2W.",
+    },
+  ];
 }

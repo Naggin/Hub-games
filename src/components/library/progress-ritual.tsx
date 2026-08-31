@@ -66,10 +66,12 @@ export function ProgressRitual({
   gameId,
   slug,
   currentStatus,
+  compact = false,
 }: {
   gameId: string;
   slug: string;
   currentStatus?: LibraryStatus | null;
+  compact?: boolean;
 }) {
   const [pending, startTransition] = useTransition();
 
@@ -83,7 +85,14 @@ export function ProgressRitual({
   return (
     <div className="space-y-3">
       <p className="font-pixel text-[10px] text-neon-cyan">RITUAL DE PROGRESSO</p>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+      <div
+        className={cn(
+          "grid gap-2",
+          compact
+            ? "grid-cols-3 sm:grid-cols-5"
+            : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5",
+        )}
+      >
         {rituals.map(({ status, label, icon: Icon, className }) => (
           <motion.div key={status} whileTap={{ scale: 0.96 }}>
             <Button
@@ -92,12 +101,13 @@ export function ProgressRitual({
               disabled={pending}
               onClick={() => handleStatus(status)}
               className={cn(
-                "h-auto w-full flex-col gap-2 py-4",
+                "h-auto w-full flex-col",
+                compact ? "gap-1 py-2.5" : "gap-2 py-4",
                 className,
                 currentStatus === status && "ring-2 ring-current",
               )}
             >
-              <Icon className="size-5" />
+              <Icon className={compact ? "size-4" : "size-5"} />
               <span className="text-xs">{label}</span>
             </Button>
           </motion.div>

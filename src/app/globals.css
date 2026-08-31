@@ -154,11 +154,39 @@
       linear-gradient(90deg, rgba(0, 245, 255, 0.04) 1px, transparent 1px);
     background-size: 40px 40px;
   }
+
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: inline-block;
+  min-width: 200%;
+  animation: marquee 28s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .scanlines::after {
     display: none;
+  }
+
+  .animate-marquee {
+    animation: none;
   }
 
   *,

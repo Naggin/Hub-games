@@ -6,7 +6,12 @@ import { getGamesWithStats } from "@/lib/games/queries";
 export default async function LibraryPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string; genre?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    status?: string;
+    genre?: string;
+    monetization?: string;
+  }>;
 }) {
   const userId = await getAuthUserId();
   if (!userId) return null;
@@ -16,7 +21,7 @@ export default async function LibraryPage({
     search: params.q,
     status: params.status as never,
     genre: params.genre,
-    limit: 60,
+    limit: 200,
   });
 
   const allGenres = Array.from(
@@ -32,7 +37,7 @@ export default async function LibraryPage({
             Catálogo de sonhos
           </h1>
           <p className="mt-2 text-muted-foreground">
-            {games.length} jogos no hub — busque, filtre e marque seu progresso.
+            {games.length} jogos no cabinet — busca, filtro, e o selo de P2W na capa.
           </p>
         </section>
 
@@ -42,6 +47,7 @@ export default async function LibraryPage({
           initialQuery={params.q ?? ""}
           initialStatus={params.status ?? ""}
           initialGenre={params.genre ?? ""}
+          initialMonetization={params.monetization ?? ""}
         />
       </div>
     </HubShell>

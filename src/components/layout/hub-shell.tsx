@@ -3,9 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
-import { Gamepad2, Home, Library, User } from "lucide-react";
+import { Bot, Gamepad2, Home, Library, User } from "lucide-react";
 import { useSyncExternalStore } from "react";
 
+import { CompanionCabinet } from "@/components/companion/companion-cabinet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 const links = [
@@ -14,7 +22,9 @@ const links = [
 ];
 
 function useDevBypass() {
-  const getSnapshot = () => process.env.NEXT_PUBLIC_DEV_BYPASS === "true";
+  const getSnapshot = () =>
+    process.env.NEXT_PUBLIC_DEV_BYPASS === "true" ||
+    !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
   return useSyncExternalStore(
     () => () => {},
@@ -23,14 +33,22 @@ function useDevBypass() {
   );
 }
 
-export function HubShell({ children }: { children: React.ReactNode }) {
+export function HubShell({
+  children,
+  browse = false,
+}: {
+  children: React.ReactNode;
+  browse?: boolean;
+}) {
   const pathname = usePathname();
   const devBypass = useDevBypass();
 
   return (
-    <div className="min-h-screen">
-      <header className="sticky top-0 z-40 border-b border-neon-cyan/15 bg-void/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
+    <div className="relative min-h-screen">
+      <div className="arcade-grid pointer-events-none fixed inset-0 z-0 opacity-25" />
+
+      <header className="sticky top-0 z-40 border-b border-neon-cyan/15 bg-void/75 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-[1600px] items-center justify-between px-4 py-3 md:px-8">
           <Link href="/hub" className="flex items-center gap-3">
             <div className="rounded-lg border border-neon-cyan/30 bg-neon-cyan/10 p-2">
               <Gamepad2 className="size-5 text-neon-cyan" />
@@ -39,7 +57,9 @@ export function HubShell({ children }: { children: React.ReactNode }) {
               <p className="font-pixel text-[10px] text-neon-cyan text-glow-cyan">
                 HUB-GAMES
               </p>
-              <p className="text-xs text-muted-foreground">Seu save universal</p>
+              <p className="text-xs text-muted-foreground">
+                O arcade do nerd gamer
+              </p>
             </div>
           </Link>
 
@@ -59,6 +79,7 @@ export function HubShell({ children }: { children: React.ReactNode }) {
                 {label}
               </Link>
             ))}
+            <CompanionTrigger />
           </nav>
 
           {devBypass ? (
@@ -74,6 +95,13 @@ export function HubShell({ children }: { children: React.ReactNode }) {
               }}
             />
           )}
+        </div>
+
+        <div className="overflow-hidden border-t border-neon-cyan/10 bg-black/25 py-1.5">
+          <p className="font-pixel animate-marquee text-[9px] tracking-widest text-neon-cyan/80 whitespace-nowrap">
+            HUB-GAMES • O ARCADE DOS NERDS • CONTINUE? • FAIR PLAY • 1 CREDIT • HIGH SCORE • INSERT COIN •{" "}
+            HUB-GAMES • O ARCADE DOS NERDS • CONTINUE? • FAIR PLAY • 1 CREDIT • HIGH SCORE • INSERT COIN •
+          </p>
         </div>
 
         <nav className="flex gap-2 border-t border-neon-cyan/10 px-4 py-2 md:hidden">
@@ -92,10 +120,45 @@ export function HubShell({ children }: { children: React.ReactNode }) {
               {label}
             </Link>
           ))}
+          <CompanionTrigger mobile />
         </nav>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-8">{children}</main>
+      <main
+        className={cn(
+          "relative z-10",
+          browse ? "w-full pb-12" : "mx-auto max-w-7xl px-4 py-8",
+        )}
+      >
+        {children}
+      </main>
     </div>
+  );
+}
+
+function CompanionTrigger({ mobile = false }: { mobile?: boolean }) {
+  return (
+    <Sheet>
+      <SheetTrigger
+        className={cn(
+          "flex items-center justify-center gap-2 rounded-full text-sm text-muted-foreground transition hover:text-neon-magenta",
+          mobile
+            ? "flex-1 rounded-lg py-2 text-xs"
+            : "px-4 py-2",
+        )}
+      >
+        <Bot className="size-4 text-neon-magenta" />
+        Companheiro
+      </SheetTrigger>
+      <SheetContent
+        side="right"
+        className="w-full border-neon-cyan/20 bg-void p-0 sm:max-w-md"
+      >
+        <SheetHeader className="sr-only">
+          <SheetTitle>Companheiro</SheetTitle>
+        </SheetHeader>
+        <CompanionCabinet />
+      </SheetContent>
+    </Sheet>
   );
 }

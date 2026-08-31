@@ -7,6 +7,7 @@ import {
   libraryEntries,
   type LibraryStatus,
 } from "@/lib/db/schema";
+import { enrichGame, type Monetization } from "@/lib/games/catalog";
 import { isMockDbEnabled } from "@/lib/games/mock-data";
 import * as mock from "@/lib/games/mock-data";
 
@@ -24,6 +25,8 @@ export type GameWithStats = {
   metacritic: number | null;
   communityScore: number | null;
   communityReviewCount: number;
+  monetization: Monetization;
+  communityTake: string;
   userEntry: {
     status: LibraryStatus;
     personalScore: number | null;
@@ -146,7 +149,7 @@ export async function getGamesWithStats(
     const community = communityMap.get(game.id);
     const entry = entryMap.get(game.id);
 
-    return {
+    return enrichGame({
       id: game.id,
       slug: game.slug,
       title: game.title,
@@ -168,7 +171,7 @@ export async function getGamesWithStats(
             shortNote: entry.shortNote,
           }
         : null,
-    };
+    });
   });
 
   if (search) {
@@ -419,7 +422,7 @@ export async function getGameWithFullDetails(
   const notes = await getCommunityNotesForGame(game.id);
 
   return {
-    game,
+    game: enrichGame(game),
     communityScore: community?.avgScore ? Number(community.avgScore) : null,
     communityReviewCount: Number(community?.count ?? 0),
     userEntry,
@@ -443,13 +446,13 @@ export async function getPlayingGamesWithDetails(userId: string) {
         platinumAt: null,
         updatedAt: new Date(),
       },
-      game,
+      game: enrichGame(game),
     }));
   }
 
   const db = getDb();
 
-  return db
+  const rows = await db
     .select({
       entry: libraryEntries,
       game: games,
@@ -464,6 +467,11 @@ export async function getPlayingGamesWithDetails(userId: string) {
     )
     .orderBy(desc(libraryEntries.updatedAt))
     .limit(6);
+
+  return rows.map(({ entry, game }) => ({
+    entry,
+    game: enrichGame(game),
+  }));
 }
 
 export async function upsertGameFromRawg(data: {
