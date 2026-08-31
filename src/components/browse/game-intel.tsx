@@ -16,7 +16,6 @@ export function GameIntel({
   monetization,
   personalScore,
   metacritic,
-  platforms,
 }: {
   pitch?: string;
   synopsis: string;
@@ -27,7 +26,6 @@ export function GameIntel({
   monetization: Monetization;
   personalScore?: number | null;
   metacritic?: number | null;
-  platforms?: string[];
 }) {
   const copy = monetizationCopy[monetization];
 
@@ -45,11 +43,6 @@ export function GameIntel({
             <p className="mt-4 max-w-2xl text-xl font-medium leading-snug md:text-2xl">
               {summary?.premise ?? pitch ?? synopsis}
             </p>
-            {platforms && platforms.length > 0 && (
-              <p className="mt-5 text-xs text-muted-foreground">
-                {platforms.slice(0, 4).join(" · ")}
-              </p>
-            )}
           </div>
           <div className="space-y-6 p-5 md:p-7 lg:col-span-5">
             <div>

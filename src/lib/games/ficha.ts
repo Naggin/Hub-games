@@ -1,3 +1,4 @@
+import { hasDossierOverlay, getGameDossier } from "@/lib/games/dossier";
 import { FICHA_BY_SLUG } from "@/lib/games/ficha-overlay";
 
 export type StoreKind =
@@ -276,8 +277,85 @@ function resolveDlcs(
   return { status: "unknown" };
 }
 
+function overlayFromDossier(game: FichaGameInput): FichaOverlay | undefined {
+  if (!hasDossierOverlay(game.slug)) return undefined;
+  const dossier = getGameDossier({
+    slug: game.slug,
+    title: game.slug,
+    platforms: game.platforms,
+    steamAppId: game.steamAppId,
+  });
+
+  const overlay: FichaOverlay = {};
+
+  if (dossier.pc === "console-only") {
+    overlay.pcSpecs = "not-pc";
+    overlay.pcNote = "Não tem versão de PC neste catálogo.";
+  } else if (dossier.pc) {
+    overlay.pcSpecs = {
+      minimum: {
+        os: "",
+        cpu: dossier.pc.min,
+        gpu: "",
+        ram: "",
+        storage: "",
+      },
+      recommended: {
+        os: "",
+        cpu: dossier.pc.rec,
+        gpu: "",
+        ram: "",
+        storage: "",
+      },
+      note: dossier.pc.note,
+    };
+  }
+
+  if (dossier.languages) {
+    const { text, audio, ptBr } = dossier.languages;
+    const tracks: LanguageTrack[] = text.map((name) => {
+      const pt = /portugu/i.test(name);
+      return {
+        name: pt ? "Português (Brasil)" : name,
+        interface: true,
+        audio: pt ? ptBr === "full" : audio.includes(name),
+        subtitles: pt ? ptBr !== "none" : true,
+      };
+    });
+    if (ptBr === "none") {
+      tracks.unshift({
+        name: "Português (Brasil)",
+        interface: false,
+        audio: false,
+        subtitles: false,
+      });
+    } else if (!tracks.some((track) => isPtBrLanguage(track.name))) {
+      tracks.unshift({
+        name: "Português (Brasil)",
+        interface: true,
+        audio: ptBr === "full",
+        subtitles: true,
+      });
+    }
+    overlay.languages = tracks;
+  }
+
+  if (dossier.dlcs) {
+    overlay.dlcs =
+      dossier.dlcs.length === 0
+        ? "none"
+        : dossier.dlcs.map((item) => ({
+            name: item.name,
+            blurb: item.note ?? "Expansão do gabinete.",
+            stores: [],
+          }));
+  }
+
+  return overlay;
+}
+
 export function resolveGameFicha(game: FichaGameInput): GameFicha {
-  const overlay = FICHA_BY_SLUG[game.slug];
+  const overlay = FICHA_BY_SLUG[game.slug] ?? overlayFromDossier(game);
   const platforms = normalizePlatforms(
     overlay?.platforms ?? game.platforms ?? [],
   );
@@ -304,5 +382,5 @@ export function resolveGameFicha(game: FichaGameInput): GameFicha {
 }
 
 export function hasRichFicha(slug: string) {
-  return Boolean(FICHA_BY_SLUG[slug]);
+  return Boolean(FICHA_BY_SLUG[slug] || hasDossierOverlay(slug));
 }

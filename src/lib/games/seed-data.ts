@@ -1263,7 +1263,7 @@ export const seedGames: SeedGame[] = [
     title: "Ratchet & Clank: Rift Apart",
     synopsis:
       "Plataforma 3D com dimensões e armas absurdas — showcase next-gen.",
-    steamAppId: 0,
+    steamAppId: 1350780,
     releaseYear: 2021,
     genres: ["Plataforma", "Ação", "Aventura"],
     platforms: ["PC", "PlayStation"],
@@ -1351,7 +1351,7 @@ export const seedGames: SeedGame[] = [
     title: "Clair Obscur: Expedition 33",
     synopsis:
       "RPG turn-based francês com arte impressionante e combate inovador.",
-    steamAppId: 0,
+    steamAppId: 1903340,
     releaseYear: 2025,
     genres: ["RPG", "Turn-based", "Narrativa"],
     platforms: ["PC", "PlayStation", "Xbox"],

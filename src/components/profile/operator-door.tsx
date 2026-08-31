@@ -41,6 +41,8 @@ import {
 } from "@/lib/profile/types";
 import { cn } from "@/lib/utils";
 
+import { SteamCabinetPanel } from "@/components/profile/steam-cabinet";
+
 import type { CabinetView } from "./cabinet-view";
 
 export function OperatorDoor({
@@ -122,6 +124,19 @@ export function OperatorDoor({
         </SheetHeader>
 
         <div className="space-y-8 p-5">
+          <section>
+            <p className="font-pixel text-[8px] tracking-widest text-neon-cyan">
+              STEAM CABINET
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Liga a Steam, a gente puxa o que você jogou e as horas. Perfil de
+              jogos precisa estar público.
+            </p>
+            <div className="mt-4">
+              <SteamCabinetPanel steam={cabinet.steam} />
+            </div>
+          </section>
+
           <section>
             <p className="font-pixel text-[8px] tracking-widest text-muted-foreground">
               NÉON DA SALA

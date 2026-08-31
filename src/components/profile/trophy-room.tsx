@@ -6,6 +6,7 @@ import { motion, useReducedMotion } from "motion/react";
 
 import { CoverImage } from "@/components/browse/cover-image";
 import { OperatorDoor } from "@/components/profile/operator-door";
+import { SteamCabinetDoor } from "@/components/profile/steam-cabinet";
 import { formatScore } from "@/lib/constants";
 import {
   ACCENT_STYLE,
@@ -49,9 +50,9 @@ export function TrophyRoom({ cabinet }: { cabinet: CabinetView }) {
 
       <div className="relative mx-auto max-w-[1440px] px-4 pb-28 pt-36 md:px-8 md:pt-32">
         <motion.header
-          initial={reduce ? false : { opacity: 0, y: 18 }}
+          initial={false}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45 }}
+          transition={{ duration: reduce ? 0 : 0.45 }}
           className="grid items-end gap-8 lg:grid-cols-12"
         >
           <div className="relative score-ticket overflow-hidden rounded-r-2xl border border-white/10 p-5 md:p-8 lg:col-span-7">
@@ -74,6 +75,29 @@ export function TrophyRoom({ cabinet }: { cabinet: CabinetView }) {
             <p className="mt-4 max-w-xl text-base text-foreground/85 md:text-lg">
               {cabinet.profile.bio}
             </p>
+            {first && (
+              <Link
+                href={`/library/${first.slug}`}
+                className="mt-5 flex items-center gap-4 border border-neon-gold/25 bg-void/50 p-2 pr-4 lg:hidden"
+              >
+                <div className="relative h-20 w-14 shrink-0 overflow-hidden">
+                  <CoverImage
+                    src={first.posterUrl || first.coverUrl}
+                    fallbackSrc={first.coverUrl}
+                    alt=""
+                    fill
+                    className="object-cover"
+                    sizes="56px"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-pixel text-[8px] tracking-widest text-neon-gold">
+                    1ST · PLATINA
+                  </p>
+                  <p className="mt-1 truncate text-lg font-semibold">{first.title}</p>
+                </div>
+              </Link>
+            )}
             <div className="mt-4 flex flex-wrap gap-2">
               {cabinet.profile.favoriteGenres.map((genre) => (
                 <span
@@ -107,6 +131,11 @@ export function TrophyRoom({ cabinet }: { cabinet: CabinetView }) {
           />
         </motion.header>
 
+        <PlayQueue
+          nowPlaying={cabinet.nowPlaying}
+          backlog={cabinet.backlog}
+        />
+
         <PlatinumPodium games={platinum} reduce={Boolean(reduce)} accent={accent} />
 
         <BeatenWall games={cabinet.showcase} />
@@ -136,6 +165,7 @@ export function TrophyRoom({ cabinet }: { cabinet: CabinetView }) {
         )}
       </div>
 
+      <SteamCabinetDoor steam={cabinet.steam} />
       <OperatorDoor
         cabinet={cabinet}
         accent={accent}
@@ -259,9 +289,9 @@ function PlatinumPodium({
 
   return (
     <motion.section
-      initial={reduce ? false : { opacity: 0, y: 24 }}
+      initial={false}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.12, duration: 0.45 }}
+      transition={{ delay: reduce ? 0 : 0.12, duration: reduce ? 0 : 0.45 }}
       className="mt-14"
     >
       <div className="flex items-end justify-between gap-4">
@@ -394,6 +424,120 @@ function EmptySide({ label }: { label: string }) {
     <div className="flex min-h-[140px] flex-1 items-center border border-dashed border-white/15 px-4 text-sm text-muted-foreground">
       {label}
     </div>
+  );
+}
+
+function PlayQueue({
+  nowPlaying,
+  backlog,
+}: {
+  nowPlaying: RankedCabinetGame[];
+  backlog: RankedCabinetGame[];
+}) {
+  return (
+    <div className="mt-12 grid gap-8 lg:grid-cols-12">
+      <QueueShelf
+        className="lg:col-span-7"
+        cabinet="CONTINUE?"
+        title="Jogando agora"
+        empty="Nada no CONTINUE?. Marca Jogando no cabinet — um toque, volta pro trampo."
+        href="/hub#continuar"
+        hrefLabel="Ir pro save"
+        games={nowPlaying}
+        tone="cyan"
+        showHours
+      />
+      <QueueShelf
+        className="lg:col-span-5"
+        cabinet="INSERT COIN"
+        title="Backlog"
+        empty="Wishlist vazia. Busca no hub e manda pra fila."
+        href="/hub?status=wishlist"
+        hrefLabel="Abrir a fila"
+        games={backlog}
+        tone="magenta"
+      />
+    </div>
+  );
+}
+
+function QueueShelf({
+  cabinet,
+  title,
+  empty,
+  href,
+  hrefLabel,
+  games,
+  tone,
+  className,
+  showHours = false,
+}: {
+  cabinet: string;
+  title: string;
+  empty: string;
+  href: string;
+  hrefLabel: string;
+  games: RankedCabinetGame[];
+  tone: "cyan" | "magenta";
+  className?: string;
+  showHours?: boolean;
+}) {
+  const toneClass = tone === "cyan" ? "text-neon-cyan" : "text-neon-magenta";
+
+  return (
+    <section className={cn("min-w-0", className)}>
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <p className={cn("font-pixel text-[8px] tracking-[0.28em]", toneClass)}>
+            {cabinet}
+          </p>
+          <h2 className="mt-2 text-2xl font-semibold tracking-tight md:text-3xl">
+            {title}
+          </h2>
+        </div>
+        <Link
+          href={href}
+          className={cn("shrink-0 text-xs hover:underline", toneClass)}
+        >
+          {hrefLabel}
+        </Link>
+      </div>
+
+      {games.length === 0 ? (
+        <p className="mt-4 text-sm text-muted-foreground">{empty}</p>
+      ) : (
+        <div className="mt-4 flex gap-3 overflow-x-auto pb-2 hide-scrollbar">
+          {games.map((game) => (
+            <Link
+              key={game.slug}
+              href={`/library/${game.slug}`}
+              className="crt-bezel w-[112px] shrink-0 overflow-hidden rounded-[16px] p-1.5 sm:w-[128px]"
+            >
+              <div className="relative aspect-[2/3] overflow-hidden rounded-sm">
+                <CoverImage
+                  src={game.posterUrl || game.coverUrl}
+                  fallbackSrc={game.coverUrl}
+                  alt={game.title}
+                  fill
+                  className="object-cover"
+                  sizes="128px"
+                />
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-void to-transparent p-2">
+                  <p className="line-clamp-2 text-[11px] font-medium leading-tight">
+                    {game.title}
+                  </p>
+                  {showHours && game.hoursPlayed != null && (
+                    <p className="mt-0.5 font-pixel text-[8px] text-neon-cyan">
+                      {Math.round(game.hoursPlayed)}h
+                    </p>
+                  )}
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 

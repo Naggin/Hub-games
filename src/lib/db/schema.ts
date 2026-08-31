@@ -95,6 +95,7 @@ export const playerProfiles = pgTable("player_profiles", {
   platinumRank: text("platinum_rank").array().notNull().default([]),
   beatenRank: text("beaten_rank").array().notNull().default([]),
   worstRank: text("worst_rank").array().notNull().default([]),
+  steamId: text("steam_id"),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatScore } from "@/lib/constants";
 import { monetizationCopy, type Monetization } from "@/lib/games/catalog";
+import type { LibraryStatus } from "@/lib/db/schema";
 
 type BillboardGame = {
   id: string;
@@ -24,7 +25,7 @@ type BillboardGame = {
   communityTake: string;
   monetization: Monetization;
   personalScore?: number | null;
-  status?: string | null;
+  status?: LibraryStatus | null;
 };
 
 export function TitleBillboard({
@@ -127,36 +128,61 @@ export function TitleBillboard({
           )}
         </div>
 
-        {isPlaying && (
-          <div className="mt-6 max-w-3xl">
-            <ProgressRitual
-              gameId={game.id}
-              slug={game.slug}
-              currentStatus="playing"
-              compact
-            />
-          </div>
-        )}
+        <div className="mt-6 max-w-3xl">
+          <ProgressRitual
+            gameId={game.id}
+            slug={game.slug}
+            currentStatus={game.status}
+            compact
+          />
+        </div>
 
-        <dl className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[
-            { label: "Platinas", value: stats.platinum, icon: Trophy, tone: "text-neon-gold" },
-            { label: "Zerados", value: stats.beaten, icon: Star, tone: "text-emerald-400" },
-            { label: "Backlog", value: stats.wishlist, icon: ListTodo, tone: "text-neon-cyan" },
-            { label: "Horas", value: stats.hours, icon: Clock, tone: "text-neon-magenta" },
-          ].map(({ label, value, icon: Icon, tone }) => (
-            <div
+        <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {(
+            [
+              {
+                label: "Platinas",
+                value: stats.platinum,
+                icon: Trophy,
+                tone: "text-neon-gold",
+                href: stats.platinum > 0 ? "#platinas" : "/perfil",
+              },
+              {
+                label: "Zerados",
+                value: stats.beaten,
+                icon: Star,
+                tone: "text-emerald-400",
+                href: stats.beaten > 0 ? "#zerados" : "/perfil",
+              },
+              {
+                label: "Backlog",
+                value: stats.wishlist,
+                icon: ListTodo,
+                tone: "text-neon-cyan",
+                href: stats.wishlist > 0 ? "#backlog" : "/perfil",
+              },
+              {
+                label: "Horas",
+                value: stats.hours,
+                icon: Clock,
+                tone: "text-neon-magenta",
+                href: "/perfil",
+              },
+            ] as const
+          ).map(({ label, value, icon: Icon, tone, href }) => (
+            <Link
               key={label}
-              className="rounded-lg border border-neon-cyan/15 bg-card/70 px-3 py-2 backdrop-blur"
+              href={href}
+              className="rounded-lg border border-neon-cyan/15 bg-card/70 px-3 py-2 backdrop-blur transition hover:border-neon-cyan/40 hover:bg-card/90"
             >
-              <dt className="flex items-center gap-2 text-[11px] text-muted-foreground">
+              <p className="flex items-center gap-2 text-[11px] text-muted-foreground">
                 <Icon className={`size-3.5 ${tone}`} />
                 {label}
-              </dt>
-              <dd className="mt-0.5 text-xl font-semibold">{value}</dd>
-            </div>
+              </p>
+              <p className="mt-0.5 text-xl font-semibold">{value}</p>
+            </Link>
           ))}
-        </dl>
+        </div>
       </div>
     </section>
   );

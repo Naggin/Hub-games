@@ -26,6 +26,9 @@ export default async function PerfilPage() {
           genrePool: cabinet.genrePool,
           pinned: cabinet.pinned,
           showcase: cabinet.showcase,
+          nowPlaying: cabinet.nowPlaying,
+          backlog: cabinet.backlog,
+          steam: cabinet.steam,
           ranks: cabinet.ranks,
           candidates: cabinet.candidates,
         }}

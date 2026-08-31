@@ -52,6 +52,13 @@ export function ProfileCabinet(props: ProfileCabinetProps) {
         genrePool: props.genrePool,
         pinned: props.pinned,
         showcase: props.showcase,
+        nowPlaying: [],
+        backlog: [],
+        steam: {
+          steamId: props.profile.steamId ?? null,
+          demo: true,
+          lastSyncedAt: null,
+        },
         ranks: props.ranks,
         candidates: props.candidates,
       }}

@@ -7,13 +7,14 @@ import { MonetizationBadge } from "@/components/browse/monetization-badge";
 import { HubShell } from "@/components/layout/hub-shell";
 import { CommunityNoteForm } from "@/components/library/community-note-form";
 import { ProgressRitual } from "@/components/library/progress-ritual";
+import { SaveStrip } from "@/components/library/save-strip";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { getAuthUserId } from "@/lib/auth";
 import { formatScore } from "@/lib/constants";
 import { getCatalogIntel } from "@/lib/games/catalog";
-import { resolveGameFicha } from "@/lib/games/ficha";
+import { isPtBrLanguage } from "@/lib/games/ficha";
 import { getGameWithFullDetails } from "@/lib/games/queries";
 
 export default async function GameDetailPage({
@@ -41,12 +42,12 @@ export default async function GameDetailPage({
   const pitch = "pitch" in game ? game.pitch : intel.pitch;
   const backdropUrl =
     "backdropUrl" in game ? game.backdropUrl : intel.backdropUrl;
-  const ficha = resolveGameFicha({
-    slug: game.slug,
-    platforms: game.platforms,
-    steamAppId: game.steamAppId,
-    releaseYear: game.releaseYear,
-  });
+  const posterUrl = "posterUrl" in game ? game.posterUrl : intel.posterUrl;
+  const ficha = intel.ficha;
+  const ptBr =
+    ficha.languages.status === "ready"
+      ? ficha.languages.tracks.find((track) => isPtBrLanguage(track.name))
+      : undefined;
 
   return (
     <HubShell browse>
@@ -64,48 +65,89 @@ export default async function GameDetailPage({
         <div className="absolute inset-0 bg-gradient-to-t from-void/75 via-transparent to-void/20" />
         <div className="scanlines pointer-events-none absolute inset-0 opacity-20" />
 
-        <div className="relative z-10 mx-auto flex min-h-[70vh] max-w-7xl flex-col justify-end px-4 pb-10 pt-28 md:px-8">
-          <p className="font-pixel text-[10px] text-neon-cyan text-glow-cyan">
-            FICHA DO CABINET
-          </p>
-          <h1 className="mt-2 text-4xl font-semibold tracking-tight md:text-5xl">
-            {game.title}
-          </h1>
-          <p className="mt-4 max-w-2xl text-lg text-foreground/90">{pitch}</p>
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <MonetizationBadge monetization={monetization} />
-            {game.releaseYear && (
-              <Badge variant="outline" className="border-white/20 text-muted-foreground">
-                {game.releaseYear}
-              </Badge>
-            )}
-            {game.genres.map((genre) => (
-              <Badge key={genre} variant="secondary">
-                {genre}
-              </Badge>
-            ))}
-            {ficha.platforms.slice(0, 4).map((platform) => (
-              <Badge
-                key={platform}
-                variant="outline"
-                className="border-neon-cyan/30 text-neon-cyan"
-              >
-                {platform}
-              </Badge>
-            ))}
+        <div className="relative z-10 mx-auto flex min-h-[70vh] max-w-7xl flex-col justify-end gap-8 px-4 pb-10 pt-28 md:flex-row md:items-end md:px-8">
+          <div className="flex-1">
+            <p className="font-pixel text-[10px] text-neon-cyan text-glow-cyan">
+              FICHA DO CABINET
+            </p>
+            <h1 className="mt-2 text-4xl font-semibold tracking-tight md:text-5xl">
+              {game.title}
+            </h1>
+            <p className="mt-4 max-w-2xl text-lg text-foreground/90">{pitch}</p>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <MonetizationBadge monetization={monetization} />
+              {ptBr && (ptBr.interface || ptBr.audio || ptBr.subtitles) ? (
+                <Badge className="border-neon-gold/50 bg-neon-gold/15 text-neon-gold">
+                  PT-BR {ptBr.audio ? "áudio" : "texto"}
+                </Badge>
+              ) : ficha.languages.status === "ready" ? (
+                <Badge variant="outline" className="border-white/20 text-muted-foreground">
+                  Sem PT-BR
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="border-white/20 text-muted-foreground">
+                  ainda sem ficha de idioma
+                </Badge>
+              )}
+              {game.releaseYear && (
+                <Badge variant="outline" className="border-white/20 text-muted-foreground">
+                  {game.releaseYear}
+                </Badge>
+              )}
+              {game.genres.map((genre) => (
+                <Badge key={genre} variant="secondary">
+                  {genre}
+                </Badge>
+              ))}
+              {ficha.platforms.slice(0, 4).map((platform) => (
+                <Badge
+                  key={platform}
+                  variant="outline"
+                  className="border-neon-cyan/30 text-neon-cyan"
+                >
+                  {platform}
+                </Badge>
+              ))}
+            </div>
+            <p className="mt-4 text-sm">
+              Comunidade{" "}
+              <strong className="text-neon-cyan">{formatScore(communityScore)}</strong>
+              <span className="text-muted-foreground">
+                {" "}
+                · “{communityTake}”
+              </span>
+            </p>
           </div>
-          <p className="mt-4 text-sm">
-            Comunidade{" "}
-            <strong className="text-neon-cyan">{formatScore(communityScore)}</strong>
-            <span className="text-muted-foreground">
-              {" "}
-              · “{communityTake}”
-            </span>
-          </p>
+          <div className="relative hidden w-[180px] shrink-0 overflow-hidden rounded-xl border border-neon-cyan/25 shadow-[0_0_28px_rgba(0,245,255,0.12)] md:block">
+            <div className="relative aspect-[2/3]">
+              <CoverImage
+                src={posterUrl || game.coverUrl}
+                fallbackSrc={game.coverUrl}
+                alt={game.title}
+                fill
+                className="object-cover"
+                sizes="180px"
+              />
+            </div>
+          </div>
         </div>
       </section>
 
       <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 md:px-8">
+        <ProgressRitual
+          gameId={game.id}
+          slug={game.slug}
+          currentStatus={userEntry?.status}
+        />
+
+        <SaveStrip
+          gameId={game.id}
+          slug={game.slug}
+          status={userEntry?.status}
+          personalScore={userEntry?.personalScore}
+          hoursPlayed={userEntry?.hoursPlayed}
+        />
+
         <GameIntel
           pitch={pitch}
           synopsis={game.synopsis}
@@ -116,16 +158,9 @@ export default async function GameDetailPage({
           monetization={monetization}
           personalScore={userEntry?.personalScore}
           metacritic={game.metacritic}
-          platforms={ficha.platforms}
         />
 
         <FichaDossier ficha={ficha} />
-
-        <ProgressRitual
-          gameId={game.id}
-          slug={game.slug}
-          currentStatus={userEntry?.status}
-        />
 
         <Separator className="bg-neon-cyan/10" />
 

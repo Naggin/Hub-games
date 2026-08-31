@@ -122,7 +122,7 @@ function Stores({ stores }: { stores: StoreLink[] }) {
   return (
     <div>
       <p className="font-pixel text-[8px] tracking-widest text-neon-gold">
-        ONDE COMPRA
+        LOJAS
       </p>
       <ul className="mt-2 flex flex-wrap gap-2">
         {stores.map((store) => {
@@ -195,7 +195,7 @@ function PcBlock({ pc }: { pc: PcIntel }) {
   return (
     <div>
       <p className="font-pixel text-[8px] tracking-widest text-neon-cyan">
-        PC · MÍNIMO / RECOMENDADO
+        PC
       </p>
       {pc.status === "not-pc" && (
         <p className="mt-3 rounded-sm border border-dashed border-white/15 px-3 py-3 text-sm text-muted-foreground">
@@ -204,8 +204,7 @@ function PcBlock({ pc }: { pc: PcIntel }) {
       )}
       {pc.status === "unknown" && (
         <p className="mt-3 text-sm text-muted-foreground">
-          Ainda sem ficha de máquina. A casa infere que roda em PC — min/rec
-          entram nos flagships primeiro.
+          Ainda sem ficha de máquina. A casa não inventa RAM nem GPU.
         </p>
       )}
       {pc.status === "ready" && (
@@ -238,7 +237,7 @@ function SpecCard({
     { k: "GPU", v: sheet.gpu },
     { k: "RAM", v: sheet.ram },
     { k: "Disco", v: sheet.storage },
-  ];
+  ].filter((row) => row.v.trim().length > 0);
 
   return (
     <div
@@ -275,8 +274,8 @@ function LanguageBlock({ languages }: { languages: GameFicha["languages"] }) {
       </p>
       {languages.status === "unknown" && (
         <p className="mt-3 text-sm text-muted-foreground">
-          Sem trilha mapeada. Se for flagship, a casa ainda está preenchendo o
-          PT-BR.
+          Ainda sem ficha de idiomas. Se o PT-BR estiver confirmado, a casa
+          marca na capa.
         </p>
       )}
       {languages.status === "ready" && (
@@ -319,12 +318,12 @@ function DlcBlock({ dlcs }: { dlcs: DlcIntel }) {
   return (
     <div>
       <p className="font-pixel text-[8px] tracking-widest text-neon-magenta">
-        DLC · EXPANSÃO
+        DLC
       </p>
       {dlcs.status === "unknown" && (
         <p className="mt-3 text-sm text-muted-foreground">
-          Sem dossiê de DLC neste título. Se a loja vender extra, a ficha ainda
-          não cravou.
+          Ainda sem ficha de DLC. Se a loja vender extra, a casa ainda não
+          cravou.
         </p>
       )}
       {dlcs.status === "none" && (
@@ -348,9 +347,36 @@ function DlcBlock({ dlcs }: { dlcs: DlcIntel }) {
               <p className="text-sm font-medium">{item.name}</p>
               <p className="mt-1 text-sm text-muted-foreground">{item.blurb}</p>
               {item.stores.length > 0 && (
-                <p className="mt-2 text-[11px] text-muted-foreground">
-                  {item.stores.map((store) => store.label).join(" · ")}
-                </p>
+                <ul className="mt-2 flex flex-wrap gap-1.5">
+                  {item.stores.map((store) => {
+                    const className = cn(
+                      "inline-flex items-center gap-1 rounded-sm border px-2 py-0.5 text-[11px]",
+                      STORE_TONE[store.kind],
+                    );
+                    const inner = (
+                      <>
+                        {store.label}
+                        {store.url ? <ExternalLink className="size-2.5 opacity-70" /> : null}
+                      </>
+                    );
+                    return (
+                      <li key={`${item.name}-${store.kind}`}>
+                        {store.url ? (
+                          <a
+                            href={store.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={className}
+                          >
+                            {inner}
+                          </a>
+                        ) : (
+                          <span className={className}>{inner}</span>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
               )}
             </li>
           ))}

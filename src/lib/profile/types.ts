@@ -21,6 +21,7 @@ export type PlayerProfile = {
   platinumRank: string[];
   beatenRank: string[];
   worstRank: string[];
+  steamId: string | null;
   updatedAt: Date;
 };
 
@@ -36,6 +37,7 @@ export type ProfilePatch = Partial<
     | "platinumRank"
     | "beatenRank"
     | "worstRank"
+    | "steamId"
   >
 >;
 
@@ -47,6 +49,7 @@ export type RankedCabinetGame = {
   personalScore: number | null;
   communityScore: number | null;
   status: string | null;
+  hoursPlayed?: number | null;
 };
 
 export type RankCandidate = { slug: string; title: string };
@@ -132,6 +135,7 @@ export function defaultPlayerProfile(userId: string): PlayerProfile {
     platinumRank: [],
     beatenRank: [],
     worstRank: [],
+    steamId: null,
     updatedAt: new Date(),
   };
 }
