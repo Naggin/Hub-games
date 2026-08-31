@@ -28,6 +28,7 @@ export default async function PerfilPage() {
           showcase: cabinet.showcase,
           nowPlaying: cabinet.nowPlaying,
           backlog: cabinet.backlog,
+          steam: cabinet.steam,
           ranks: cabinet.ranks,
           candidates: cabinet.candidates,
         }}

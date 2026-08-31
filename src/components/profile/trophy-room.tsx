@@ -6,6 +6,7 @@ import { motion, useReducedMotion } from "motion/react";
 
 import { CoverImage } from "@/components/browse/cover-image";
 import { OperatorDoor } from "@/components/profile/operator-door";
+import { SteamCabinetDoor } from "@/components/profile/steam-cabinet";
 import { formatScore } from "@/lib/constants";
 import {
   ACCENT_STYLE,
@@ -164,6 +165,7 @@ export function TrophyRoom({ cabinet }: { cabinet: CabinetView }) {
         )}
       </div>
 
+      <SteamCabinetDoor steam={cabinet.steam} />
       <OperatorDoor
         cabinet={cabinet}
         accent={accent}

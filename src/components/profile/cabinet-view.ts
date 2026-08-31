@@ -22,6 +22,11 @@ export type CabinetView = {
   showcase: RankedCabinetGame[];
   nowPlaying: RankedCabinetGame[];
   backlog: RankedCabinetGame[];
+  steam: {
+    steamId: string | null;
+    demo: boolean;
+    lastSyncedAt: string | null;
+  };
   ranks: {
     platinum: RankedCabinetGame[];
     beaten: RankedCabinetGame[];
