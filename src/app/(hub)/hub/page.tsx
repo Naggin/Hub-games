@@ -44,7 +44,7 @@ export default async function HubPage() {
 
       {playing.length > 0 ? (
         <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {playing.map(({ game, entry }) => (
+          {playing.map(({ game, entry }, index) => (
             <StaggerItem key={game.id}>
               <GameCard
                 slug={game.slug}
@@ -54,6 +54,7 @@ export default async function HubPage() {
                 status={entry.status}
                 personalScore={entry.personalScore}
                 genres={game.genres}
+                priority={index < 3}
               />
             </StaggerItem>
           ))}

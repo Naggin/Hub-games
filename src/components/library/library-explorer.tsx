@@ -213,7 +213,7 @@ export function LibraryExplorer({
             isPending && "opacity-50",
           )}
         >
-          {games.map((game) => (
+          {games.map((game, index) => (
             <StaggerItem key={game.id}>
               <GameCard
                 slug={game.slug}
@@ -224,6 +224,7 @@ export function LibraryExplorer({
                 personalScore={game.userEntry?.personalScore}
                 status={game.userEntry?.status}
                 genres={game.genres}
+                priority={index < 4}
               />
             </StaggerItem>
           ))}

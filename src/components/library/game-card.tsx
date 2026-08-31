@@ -21,6 +21,7 @@ type GameCardProps = {
   personalScore?: number | null;
   status?: string | null;
   genres?: string[];
+  priority?: boolean;
 };
 
 function NavigationHint() {
@@ -44,6 +45,7 @@ export function GameCard({
   personalScore,
   status,
   genres = [],
+  priority = false,
 }: GameCardProps) {
   return (
     <Link href={`/library/${slug}`} className="group block h-full">
@@ -62,6 +64,7 @@ export function GameCard({
                 src={coverUrl}
                 alt={title}
                 fill
+                priority={priority}
                 className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                 sizes="(max-width: 768px) 100vw, 33vw"
               />
