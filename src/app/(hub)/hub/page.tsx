@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { Trophy, Gamepad2, Star, Clock } from "lucide-react";
+import { Library, Sparkles } from "lucide-react";
 
 import { CompanionCabinet } from "@/components/companion/companion-cabinet";
+import { PrideStats } from "@/components/hub/pride-stats";
 import { GameCard } from "@/components/library/game-card";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { Card } from "@/components/ui/card";
@@ -21,13 +22,6 @@ export default async function HubPage() {
     getPlayingGamesWithDetails(userId),
     getGamesWithStats(userId, { limit: 8 }),
   ]);
-
-  const statCards = [
-    { label: "Jogando", value: stats.playing, icon: Gamepad2, color: "text-neon-cyan" },
-    { label: "Zerados", value: stats.beaten, icon: Star, color: "text-emerald-400" },
-    { label: "Platinas", value: stats.platinum, icon: Trophy, color: "text-neon-gold" },
-    { label: "Horas", value: stats.hours, icon: Clock, color: "text-neon-magenta" },
-  ];
 
   return (
     <div className="space-y-10">
@@ -61,33 +55,27 @@ export default async function HubPage() {
         </Stagger>
       ) : (
         <Reveal>
-          <Card className="border-dashed border-neon-cyan/20 bg-card/40 p-8 text-center">
-            <p className="text-muted-foreground">
-              Nada em andamento.{" "}
-              <Link href="/library" className="text-neon-cyan hover:underline">
-                Escolha um jogo na biblioteca
-              </Link>{" "}
-              e marque como Jogando.
+          <Card className="border-dashed border-neon-cyan/20 bg-card/40 p-10 text-center">
+            <Sparkles className="mx-auto size-8 text-neon-cyan" />
+            <p className="mt-4 font-pixel text-[10px] text-neon-cyan">
+              READY PLAYER ONE
             </p>
+            <p className="mt-4 text-muted-foreground">
+              Nenhum jogo em andamento agora. Escolha um da biblioteca e marque
+              como Jogando — ele aparece aqui no próximo login.
+            </p>
+            <Link
+              href="/library"
+              className="mt-6 inline-flex items-center gap-2 rounded-lg border border-neon-cyan/40 px-4 py-2 text-sm text-neon-cyan transition-colors hover:bg-neon-cyan/10"
+            >
+              <Library className="size-4" />
+              Explorar biblioteca
+            </Link>
           </Card>
         </Reveal>
       )}
 
-      <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {statCards.map(({ label, value, icon: Icon, color }) => (
-          <StaggerItem key={label}>
-            <Card className="border-neon-cyan/10 bg-card/50 p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">{label}</p>
-                  <p className="mt-1 text-3xl font-semibold">{value}</p>
-                </div>
-                <Icon className={`size-8 ${color}`} />
-              </div>
-            </Card>
-          </StaggerItem>
-        ))}
-      </Stagger>
+      <PrideStats stats={stats} />
 
       <section className="grid gap-8 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
