@@ -55,7 +55,7 @@ export function CommunityNoteForm({
           id="body"
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          placeholder="Vale a platina? Como é o final?"
+          placeholder="Vale o tempo? Sem spoiler de história."
           required
           minLength={10}
           className="border-neon-magenta/20 bg-secondary/40"
