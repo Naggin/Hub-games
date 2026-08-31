@@ -1,37 +1,34 @@
 import { HubShell } from "@/components/layout/hub-shell";
-import { ProfileCabinet } from "@/components/profile/profile-cabinet";
+import { TrophyRoom } from "@/components/profile/trophy-room";
 import { getAuthUserId } from "@/lib/auth";
 import { getProfileCabinet } from "@/lib/games/queries";
 
 export const metadata = {
   title: "Perfil | Hub-games",
-  description:
-    "Seu cabinet: platinas, zerados, piores, e a vibe que você escolhe.",
+  description: "Sua sala de troféus — platinas, zerados e o hall da vergonha.",
 };
 
 export default async function PerfilPage() {
   const userId = await getAuthUserId();
   if (!userId) return null;
 
-  const data = await getProfileCabinet(userId);
+  const cabinet = await getProfileCabinet(userId);
 
   return (
-    <HubShell>
-      <ProfileCabinet
-        profile={data.profile}
-        stats={{
-          platinum: data.stats.platinum,
-          beaten: data.stats.beaten,
-          playing: data.stats.playing,
-          wishlist: data.stats.wishlist,
-          dropped: data.stats.dropped,
-          hours: data.stats.hours,
+    <HubShell browse>
+      <TrophyRoom
+        cabinet={{
+          profile: {
+            ...cabinet.profile,
+            updatedAt: cabinet.profile.updatedAt.toISOString(),
+          },
+          stats: cabinet.stats,
+          genrePool: cabinet.genrePool,
+          pinned: cabinet.pinned,
+          showcase: cabinet.showcase,
+          ranks: cabinet.ranks,
+          candidates: cabinet.candidates,
         }}
-        genrePool={data.genrePool}
-        pinned={data.pinned}
-        showcase={data.showcase}
-        ranks={data.ranks}
-        candidates={data.candidates}
       />
     </HubShell>
   );

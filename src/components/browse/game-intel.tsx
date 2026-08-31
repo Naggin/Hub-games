@@ -1,28 +1,10 @@
 import { MonetizationBadge } from "@/components/browse/monetization-badge";
-import { Card } from "@/components/ui/card";
 import { formatScore } from "@/lib/constants";
 import {
   monetizationCopy,
   type Monetization,
   type SpoilerFreeSummary,
 } from "@/lib/games/catalog";
-
-function Beat({
-  label,
-  text,
-}: {
-  label: string;
-  text: string;
-}) {
-  return (
-    <div className="rounded-lg border border-white/5 bg-secondary/40 p-4">
-      <p className="font-pixel text-[8px] tracking-widest text-muted-foreground">
-        {label}
-      </p>
-      <p className="mt-2 text-sm leading-relaxed text-foreground/90">{text}</p>
-    </div>
-  );
-}
 
 export function GameIntel({
   pitch,
@@ -50,40 +32,58 @@ export function GameIntel({
   const copy = monetizationCopy[monetization];
 
   return (
-    <div className="space-y-4">
-      <Card className="border-neon-cyan/15 bg-card/70 p-5 md:p-6">
-        <p className="font-pixel text-[9px] text-neon-cyan">O QUE É</p>
-        <p className="mt-1 text-[11px] text-muted-foreground">
-          Sem spoiler de história — premissa, loop e pra quem é.
-        </p>
-        {pitch && (
-          <p className="mt-3 max-w-3xl text-lg font-medium leading-snug">
-            {pitch}
-          </p>
-        )}
-        {summary ? (
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            <Beat label="PREMISSA" text={summary.premise} />
-            <Beat label="COMO SE JOGA" text={summary.howYouPlay} />
-            <Beat label="PRA QUEM É" text={summary.whoItsFor} />
-            <Beat label="A GALERA DISCUTE" text={summary.communityTalks} />
-          </div>
-        ) : (
-          (!pitch || synopsis.trim() !== pitch.trim()) && (
-            <p className="mt-3 leading-relaxed text-muted-foreground">
-              {synopsis}
+    <div className="space-y-6">
+      <section className="relative overflow-hidden border border-neon-cyan/20 bg-card/60">
+        <div className="absolute right-4 top-4 rotate-[-8deg] border-2 border-neon-gold/70 px-3 py-1 font-pixel text-[8px] tracking-widest text-neon-gold">
+          SEM SPOILER
+        </div>
+        <div className="grid gap-0 lg:grid-cols-12">
+          <div className="border-b border-white/5 p-5 md:p-7 lg:col-span-7 lg:border-b-0 lg:border-r">
+            <p className="font-pixel text-[9px] tracking-[0.28em] text-neon-cyan">
+              PREMISSA
             </p>
-          )
+            <p className="mt-4 max-w-2xl text-xl font-medium leading-snug md:text-2xl">
+              {summary?.premise ?? pitch ?? synopsis}
+            </p>
+            {platforms && platforms.length > 0 && (
+              <p className="mt-5 text-xs text-muted-foreground">
+                {platforms.slice(0, 4).join(" · ")}
+              </p>
+            )}
+          </div>
+          <div className="space-y-6 p-5 md:p-7 lg:col-span-5">
+            <div>
+              <p className="font-pixel text-[8px] tracking-widest text-neon-cyan">
+                COMO SE JOGA
+              </p>
+              <p className="mt-2 text-sm leading-relaxed text-foreground/90">
+                {summary?.howYouPlay ?? synopsis}
+              </p>
+            </div>
+            {summary ? (
+              <div className="score-ticket relative overflow-hidden rounded-r-lg border border-neon-gold/25 p-4 pl-6">
+                <p className="font-pixel text-[8px] tracking-widest text-neon-gold">
+                  PRA QUEM É
+                </p>
+                <p className="mt-2 text-sm leading-relaxed">{summary.whoItsFor}</p>
+              </div>
+            ) : null}
+          </div>
+        </div>
+        {summary && (
+          <div className="border-t border-neon-magenta/25 bg-neon-magenta/5 px-5 py-5 md:px-7">
+            <p className="font-pixel text-[8px] tracking-widest text-neon-magenta">
+              A GALERA DISCUTE — SEM PLOT
+            </p>
+            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-foreground/90">
+              {summary.communityTalks}
+            </p>
+          </div>
         )}
-        {platforms && platforms.length > 0 && (
-          <p className="mt-4 text-xs text-muted-foreground">
-            {platforms.slice(0, 4).join(" · ")}
-          </p>
-        )}
-      </Card>
+      </section>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Card className="border-neon-magenta/20 bg-card/70 p-5">
+        <div className="border border-neon-magenta/20 bg-card/70 p-5">
           <p className="font-pixel text-[9px] text-neon-magenta">A GALERA</p>
           <p className="mt-3 text-2xl font-semibold text-neon-cyan">
             {formatScore(communityScore)}
@@ -106,9 +106,9 @@ export function GameIntel({
           <blockquote className="mt-3 text-sm leading-relaxed text-muted-foreground">
             “{communityTake}”
           </blockquote>
-        </Card>
+        </div>
 
-        <Card className="border-neon-gold/20 bg-card/70 p-5">
+        <div className="border border-neon-gold/20 bg-card/70 p-5">
           <p className="font-pixel text-[9px] text-neon-gold">PAY TO WIN?</p>
           <div className="mt-3">
             <MonetizationBadge monetization={monetization} />
@@ -116,7 +116,7 @@ export function GameIntel({
           <p className="mt-3 leading-relaxed text-muted-foreground">
             {copy.blurb}
           </p>
-        </Card>
+        </div>
       </div>
     </div>
   );

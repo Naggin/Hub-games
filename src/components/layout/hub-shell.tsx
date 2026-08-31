@@ -140,22 +140,20 @@ export function HubShell({
           </div>
         )}
 
-        <nav className="flex gap-2 border-t border-white/5 px-4 py-2 lg:hidden">
+        <nav className="flex gap-1 border-t border-white/5 px-2 py-1.5 lg:hidden">
           {links.map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
               href={href}
               className={cn(
-                "flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-[11px]",
+                "flex flex-1 flex-col items-center gap-0.5 rounded-lg py-1.5 text-[9px]",
                 pathname.startsWith(href.replace("#continuar", ""))
                   ? "bg-neon-cyan/15 text-neon-cyan"
                   : "text-muted-foreground",
               )}
             >
               <Icon className="size-4" />
-              {label === "Continuar jogando"
-                ? "Continuar"
-                : label}
+              {label === "Continuar jogando" ? "Continuar" : label}
             </Link>
           ))}
           <CompanionTrigger mobile />
@@ -180,7 +178,7 @@ function CompanionTrigger({ mobile = false }: { mobile?: boolean }) {
       <SheetTrigger
         className={cn(
           "flex items-center justify-center gap-2 rounded-full text-sm text-muted-foreground transition hover:text-neon-magenta",
-          mobile ? "flex-1 rounded-lg py-2 text-[11px]" : "px-4 py-2",
+          mobile ? "flex-1 flex-col rounded-lg py-1.5 text-[9px]" : "px-4 py-2",
         )}
       >
         <Bot className="size-4 text-neon-magenta" />
