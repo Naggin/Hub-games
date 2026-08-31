@@ -1,11 +1,7 @@
-type MonetizationKind = "fair" | "cosmetics" | "gacha" | "pay_to_win";
+import { MORE_SUMMARIES } from "@/lib/games/summaries-more";
+import type { MonetizationKind, SpoilerFreeSummary } from "@/lib/games/catalog-types";
 
-export type SpoilerFreeSummary = {
-  premise: string;
-  howYouPlay: string;
-  whoItsFor: string;
-  communityTalks: string;
-};
+export type { SpoilerFreeSummary };
 
 type GameHint = {
   slug: string;
@@ -21,7 +17,7 @@ type GameHint = {
  * Flagship cabinets: 4 beats, zero spoiler de plot.
  * Premissa / loop / pra quem é / o que a galera discute — sem twist, sem ending.
  */
-export const SUMMARIES_BY_SLUG: Record<string, SpoilerFreeSummary> = {
+const FLAGSHIP_SUMMARIES: Record<string, SpoilerFreeSummary> = {
   "the-witcher-3-wild-hunt": {
     premise:
       "Você é um bruxo profissional num continente sujo: contratos de monstro, política de taverna e um mundo que não espera você ficar bom. A missão pessoal existe, mas o mapa vive sozinho.",
@@ -442,6 +438,11 @@ export const SUMMARIES_BY_SLUG: Record<string, SpoilerFreeSummary> = {
     communityTalks:
       "A casa discute se 'passa do primeiro' e a dificuldade. Sem o que o reino novo esconde — mapa é mistério, não wiki.",
   },
+};
+
+export const SUMMARIES_BY_SLUG: Record<string, SpoilerFreeSummary> = {
+  ...FLAGSHIP_SUMMARIES,
+  ...MORE_SUMMARIES,
 };
 
 const GENRE_PLAY: { test: (g: string[]) => boolean; text: string }[] = [

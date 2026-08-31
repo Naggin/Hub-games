@@ -1,26 +1,23 @@
+import { MORE_OVERLAYS } from "@/lib/games/catalog-more";
+import type {
+  CatalogOverlay,
+  MonetizationKind,
+  SpoilerFreeSummary,
+} from "@/lib/games/catalog-types";
+import type { LibraryStatus } from "@/lib/db/schema";
+import { resolveGameFicha, type GameFicha } from "@/lib/games/ficha";
 import {
   formatLongPitch,
   getSpoilerFreeSummary,
-  type SpoilerFreeSummary,
 } from "@/lib/games/spoiler-free";
 
-export type { SpoilerFreeSummary };
-
-export type MonetizationKind = "fair" | "cosmetics" | "gacha" | "pay_to_win";
+export type { CatalogOverlay, MonetizationKind, SpoilerFreeSummary, GameFicha };
 
 export const MONETIZATION_LABELS: Record<MonetizationKind, string> = {
   fair: "Sem P2W",
   cosmetics: "Só cosmético",
   gacha: "Gacha",
   pay_to_win: "Pay to win",
-};
-
-export type CatalogOverlay = {
-  pitch?: string;
-  communityTake?: string;
-  monetization?: MonetizationKind;
-  /** Optional inline override; flagship copy lives in spoiler-free.ts. */
-  summary?: SpoilerFreeSummary;
 };
 
 export type CatalogIdentity = {
@@ -32,6 +29,7 @@ export type CatalogIdentity = {
   backdropUrl: string;
   summary: SpoilerFreeSummary;
   longPitch: string;
+  ficha: GameFicha;
 };
 
 type CatalogGameInput = {
@@ -40,6 +38,8 @@ type CatalogGameInput = {
   synopsis: string;
   genres: string[];
   coverUrl: string;
+  platforms?: string[];
+  releaseYear?: number | null;
   steamAppId?: number | null;
   communityScore?: number | null;
 };
@@ -48,7 +48,7 @@ type CatalogGameInput = {
  * Overlay by slug — pitches, community takes and monetization for known titles.
  * Games missing here still get inferred identity (genres + Steam art).
  */
-export const CATALOG_BY_SLUG: Record<string, CatalogOverlay> = {
+const FLAGSHIP_OVERLAYS: Record<string, CatalogOverlay> = {
   "the-witcher-3-wild-hunt": {
     pitch: "Mundo aberto de escolhas pesadas, monstros e um bruxo cansado.",
     communityTake: "Ainda o RPG que a galera indica de olhos fechados.",
@@ -455,6 +455,11 @@ export const CATALOG_BY_SLUG: Record<string, CatalogOverlay> = {
   },
 };
 
+export const CATALOG_BY_SLUG: Record<string, CatalogOverlay> = {
+  ...FLAGSHIP_OVERLAYS,
+  ...MORE_OVERLAYS,
+};
+
 const GACHA_GENRES = new Set(["gacha", "cartas"]);
 const COSMETICS_GENRES = new Set([
   "free-to-play",
@@ -577,6 +582,12 @@ export function getCatalogIdentity(game: CatalogGameInput): CatalogIdentity {
     backdropUrl: appId ? steamAsset(appId, "hero") : game.coverUrl,
     summary,
     longPitch: formatLongPitch(summary),
+    ficha: resolveGameFicha({
+      slug: game.slug,
+      platforms: game.platforms,
+      steamAppId: game.steamAppId,
+      releaseYear: game.releaseYear,
+    }),
   };
 }
 
@@ -642,9 +653,9 @@ export type BrowseGame = {
   posterUrl?: string;
   backdropUrl?: string;
   personalScore?: number | null;
-  status?: string | null;
+  status?: LibraryStatus | null;
   userEntry?: {
-    status?: string | null;
+    status?: LibraryStatus | null;
     personalScore?: number | null;
   } | null;
 };

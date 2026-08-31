@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatScore } from "@/lib/constants";
 import { monetizationCopy, type Monetization } from "@/lib/games/catalog";
+import type { LibraryStatus } from "@/lib/db/schema";
 
 type BillboardGame = {
   id: string;
@@ -24,7 +25,7 @@ type BillboardGame = {
   communityTake: string;
   monetization: Monetization;
   personalScore?: number | null;
-  status?: string | null;
+  status?: LibraryStatus | null;
 };
 
 export function TitleBillboard({
@@ -127,16 +128,14 @@ export function TitleBillboard({
           )}
         </div>
 
-        {isPlaying && (
-          <div className="mt-6 max-w-3xl">
-            <ProgressRitual
-              gameId={game.id}
-              slug={game.slug}
-              currentStatus="playing"
-              compact
-            />
-          </div>
-        )}
+        <div className="mt-6 max-w-3xl">
+          <ProgressRitual
+            gameId={game.id}
+            slug={game.slug}
+            currentStatus={game.status}
+            compact
+          />
+        </div>
 
         <dl className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[

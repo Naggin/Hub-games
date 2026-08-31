@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { getAuthUserId } from "@/lib/auth";
 import { formatScore } from "@/lib/constants";
 import { getCatalogIntel } from "@/lib/games/catalog";
-import { resolveGameFicha } from "@/lib/games/ficha";
+import { isPtBrLanguage } from "@/lib/games/ficha";
 import { getGameWithFullDetails } from "@/lib/games/queries";
 
 export default async function GameDetailPage({

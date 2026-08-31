@@ -4,6 +4,7 @@ import { TitleBillboard } from "@/components/browse/title-billboard";
 import { HubShell } from "@/components/layout/hub-shell";
 import { Card } from "@/components/ui/card";
 import { getAuthUserId } from "@/lib/auth";
+import type { LibraryStatus } from "@/lib/db/schema";
 import { buildCatalogRows, type BrowseGame } from "@/lib/games/catalog";
 import {
   getGamesWithStats,
@@ -28,18 +29,18 @@ function toBrowseGame(
     posterUrl?: string;
     backdropUrl?: string;
     userEntry?: {
-      status?: string | null;
+      status?: LibraryStatus | null;
       personalScore?: number | null;
     } | null;
   },
-  extras?: { status?: string | null; personalScore?: number | null },
+  extras?: { status?: LibraryStatus | null; personalScore?: number | null },
 ): BrowseGame {
   return {
     ...game,
     communityScore: game.communityScore ?? null,
-    status: extras?.status ?? game.userEntry?.status ?? null,
+    status: (extras?.status ?? game.userEntry?.status ?? null) as BrowseGame["status"],
     personalScore: extras?.personalScore ?? game.userEntry?.personalScore ?? null,
-    userEntry: game.userEntry,
+    userEntry: game.userEntry as BrowseGame["userEntry"],
   };
 }
 
