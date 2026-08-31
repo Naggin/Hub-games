@@ -74,6 +74,29 @@ export function TrophyRoom({ cabinet }: { cabinet: CabinetView }) {
             <p className="mt-4 max-w-xl text-base text-foreground/85 md:text-lg">
               {cabinet.profile.bio}
             </p>
+            {first && (
+              <Link
+                href={`/library/${first.slug}`}
+                className="mt-5 flex items-center gap-4 border border-neon-gold/25 bg-void/50 p-2 pr-4 lg:hidden"
+              >
+                <div className="relative h-20 w-14 shrink-0 overflow-hidden">
+                  <CoverImage
+                    src={first.posterUrl || first.coverUrl}
+                    fallbackSrc={first.coverUrl}
+                    alt=""
+                    fill
+                    className="object-cover"
+                    sizes="56px"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-pixel text-[8px] tracking-widest text-neon-gold">
+                    1ST · PLATINA
+                  </p>
+                  <p className="mt-1 truncate text-lg font-semibold">{first.title}</p>
+                </div>
+              </Link>
+            )}
             <div className="mt-4 flex flex-wrap gap-2">
               {cabinet.profile.favoriteGenres.map((genre) => (
                 <span
