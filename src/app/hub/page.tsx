@@ -205,6 +205,16 @@ export default async function HubPage({
           />
         )}
 
+        {prideRows.map((row) => (
+          <CatalogRow
+            key={row.id}
+            id={row.id}
+            cabinet={row.cabinet}
+            title={row.title}
+            games={row.games.map(toPosterProps)}
+          />
+        ))}
+
         <CabinetSearch
           games={games}
           genres={allGenres}
@@ -213,15 +223,6 @@ export default async function HubPage({
           initialGenre={params.genre ?? ""}
           initialMonetization={params.monetization ?? ""}
         >
-          {prideRows.map((row) => (
-            <CatalogRow
-              key={row.id}
-              id={row.id}
-              cabinet={row.cabinet}
-              title={row.title}
-              games={row.games.map(toPosterProps)}
-            />
-          ))}
           {rest.map((row) => (
             <CatalogRow
               key={row.id}
