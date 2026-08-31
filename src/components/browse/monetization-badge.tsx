@@ -23,7 +23,7 @@ export function MonetizationBadge({
         copy.className,
       )}
     >
-      {size === "sm" ? copy.cabinet : `${copy.cabinet} · ${copy.label}`}
+      {size === "sm" ? copy.cabinet : copy.label}
     </Badge>
   );
 }

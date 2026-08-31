@@ -7,10 +7,12 @@ import { PosterCard, type PosterCardProps } from "@/components/browse/poster-car
 import { Button } from "@/components/ui/button";
 
 export function CatalogRow({
+  id,
   cabinet,
   title,
   games,
 }: {
+  id?: string;
   cabinet: string;
   title: string;
   games: PosterCardProps[];
@@ -27,7 +29,7 @@ export function CatalogRow({
   if (games.length === 0) return null;
 
   return (
-    <section className="group/row space-y-3">
+    <section id={id} className="group/row scroll-mt-28 space-y-3">
       <div className="flex items-end justify-between px-4 md:px-8">
         <div>
           <p className="font-pixel text-[9px] text-neon-cyan text-glow-cyan">

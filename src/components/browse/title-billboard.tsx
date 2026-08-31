@@ -1,7 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
-import { Play, Trophy, Gamepad2, Star, Clock } from "lucide-react";
+import { Play, Trophy, Star, Clock, ListTodo } from "lucide-react";
 
+import { CoverImage } from "@/components/browse/cover-image";
 import { MonetizationBadge } from "@/components/browse/monetization-badge";
 import { ProgressRitual } from "@/components/library/progress-ritual";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +14,9 @@ type BillboardGame = {
   slug: string;
   title: string;
   synopsis: string;
+  pitch?: string;
   coverUrl: string;
+  backdropUrl?: string;
   releaseYear?: number | null;
   genres: string[];
   platforms?: string[];
@@ -33,29 +35,31 @@ export function TitleBillboard({
   game: BillboardGame;
   isPlaying: boolean;
   stats: {
-    playing: number;
     beaten: number;
     platinum: number;
+    wishlist: number;
     hours: number;
   };
 }) {
   const copy = monetizationCopy[game.monetization];
+  const pitch = game.pitch || game.synopsis;
 
   return (
-    <section className="relative isolate min-h-[78vh] overflow-hidden border-b border-neon-cyan/20">
-      <Image
-        src={game.coverUrl}
+    <section className="relative isolate min-h-[82vh] overflow-hidden border-b border-neon-cyan/20">
+      <CoverImage
+        src={game.backdropUrl || game.coverUrl}
+        fallbackSrc={game.coverUrl}
         alt=""
         fill
         priority
         className="object-cover object-center scale-105"
         sizes="100vw"
       />
-      <div className="absolute inset-0 bg-gradient-to-r from-void via-void/85 to-void/25" />
-      <div className="absolute inset-0 bg-gradient-to-t from-void via-transparent to-void/50" />
-          <div className="scanlines pointer-events-none absolute inset-0 opacity-20" />
+      <div className="absolute inset-0 bg-gradient-to-r from-void via-void/85 to-void/20" />
+      <div className="absolute inset-0 bg-gradient-to-t from-void via-transparent to-void/55" />
+      <div className="scanlines pointer-events-none absolute inset-0 opacity-20" />
 
-      <div className="relative z-10 mx-auto flex min-h-[78vh] max-w-7xl flex-col justify-end px-4 pb-10 pt-24 md:px-8 md:pb-14">
+      <div className="relative z-10 mx-auto flex min-h-[82vh] max-w-7xl flex-col justify-end px-4 pb-10 pt-28 md:px-8 md:pb-14">
         <p className="font-pixel text-[10px] text-neon-gold text-glow-gold">
           {isPlaying ? "NOW PLAYING" : "FEATURED CABINET"}
         </p>
@@ -79,7 +83,7 @@ export function TitleBillboard({
         </div>
 
         <p className="mt-5 max-w-2xl text-base leading-relaxed text-foreground/90 md:text-lg">
-          {game.synopsis}
+          {pitch}
         </p>
 
         <blockquote className="mt-4 max-w-2xl border-l-2 border-neon-magenta/60 pl-4 text-sm text-muted-foreground md:text-base">
@@ -136,9 +140,9 @@ export function TitleBillboard({
 
         <dl className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
-            { label: "Jogando", value: stats.playing, icon: Gamepad2, tone: "text-neon-cyan" },
-            { label: "Zerados", value: stats.beaten, icon: Star, tone: "text-emerald-400" },
             { label: "Platinas", value: stats.platinum, icon: Trophy, tone: "text-neon-gold" },
+            { label: "Zerados", value: stats.beaten, icon: Star, tone: "text-emerald-400" },
+            { label: "Backlog", value: stats.wishlist, icon: ListTodo, tone: "text-neon-cyan" },
             { label: "Horas", value: stats.hours, icon: Clock, tone: "text-neon-magenta" },
           ].map(({ label, value, icon: Icon, tone }) => (
             <div

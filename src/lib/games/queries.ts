@@ -26,7 +26,11 @@ export type GameWithStats = {
   communityScore: number | null;
   communityReviewCount: number;
   monetization: Monetization;
+  monetizationLabel: string;
   communityTake: string;
+  pitch: string;
+  posterUrl: string;
+  backdropUrl: string;
   userEntry: {
     status: LibraryStatus;
     personalScore: number | null;
@@ -421,9 +425,13 @@ export async function getGameWithFullDetails(
 
   const notes = await getCommunityNotesForGame(game.id);
 
+  const communityScore = community?.avgScore
+    ? Number(community.avgScore)
+    : null;
+
   return {
-    game: enrichGame(game),
-    communityScore: community?.avgScore ? Number(community.avgScore) : null,
+    game: enrichGame({ ...game, communityScore }),
+    communityScore,
     communityReviewCount: Number(community?.count ?? 0),
     userEntry,
     notes,

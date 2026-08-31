@@ -1,5 +1,4 @@
 import { enrichGame, type Monetization } from "@/lib/games/catalog";
-import { withCatalogIdentity } from "@/lib/games/catalog";
 import { seedGames } from "@/lib/games/seed-data";
 
 const mockLibrary = new Map<
@@ -87,7 +86,7 @@ export function getMockGamesWithStats(userId: string, limit = 48) {
         ? notes.reduce((sum, n) => sum + n.score, 0) / notes.length
         : mockCommunityScore(game.slug, game.metacritic);
 
-    return withCatalogIdentity({
+    return enrichGame({
       ...game,
       communityScore,
       communityReviewCount: notes.length || 12,
@@ -177,6 +176,7 @@ export function upsertMockCommunityNote(
 }
 
 export function getMockGameDetails(slug: string, userId: string) {
+  ensureMockLibrary(userId);
   const game = getMockGameBySlug(slug);
   if (!game) return null;
 
@@ -187,7 +187,7 @@ export function getMockGameDetails(slug: string, userId: string) {
     notes.reduce((sum, n) => sum + n.score, 0) / Math.max(notes.length, 1);
 
   return {
-    game: withCatalogIdentity({ ...game, communityScore }),
+    game: enrichGame({ ...game, communityScore }),
     communityScore,
     communityReviewCount: notes.length,
     userEntry: entry

@@ -25,6 +25,9 @@ function toBrowseGame(
     communityReviewCount?: number;
     monetization: BrowseGame["monetization"];
     communityTake: string;
+    pitch?: string;
+    posterUrl?: string;
+    backdropUrl?: string;
     userEntry?: {
       status?: string | null;
       personalScore?: number | null;
@@ -68,6 +71,9 @@ export default async function HubPage() {
         communityReviewCount: fromCatalog?.communityReviewCount,
         monetization: fromCatalog?.monetization ?? game.monetization,
         communityTake: fromCatalog?.communityTake ?? game.communityTake,
+        pitch: fromCatalog?.pitch ?? game.pitch,
+        posterUrl: fromCatalog?.posterUrl ?? game.posterUrl,
+        backdropUrl: fromCatalog?.backdropUrl ?? game.backdropUrl,
         userEntry: {
           status: entry.status,
           personalScore: entry.personalScore,
@@ -129,6 +135,7 @@ export default async function HubPage() {
         {rows.map((row) => (
           <CatalogRow
             key={row.id}
+            id={row.id}
             cabinet={row.cabinet}
             title={row.title}
             games={row.games.map((game) => ({
@@ -136,6 +143,8 @@ export default async function HubPage() {
               title: game.title,
               coverUrl: game.coverUrl,
               synopsis: game.synopsis,
+              pitch: game.pitch,
+              posterUrl: game.posterUrl,
               releaseYear: game.releaseYear,
               communityScore: game.communityScore,
               personalScore: game.personalScore ?? game.userEntry?.personalScore,

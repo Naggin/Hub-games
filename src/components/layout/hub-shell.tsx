@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import { Bot, Gamepad2, Home, Library, User } from "lucide-react";
-import { useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { CompanionCabinet } from "@/components/companion/companion-cabinet";
 import {
@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 
 const links = [
   { href: "/hub", label: "Hub", icon: Home },
+  { href: "/hub#continuar", label: "Continuar jogando", icon: Gamepad2 },
   { href: "/library", label: "Biblioteca", icon: Library },
 ];
 
@@ -42,12 +43,34 @@ export function HubShell({
 }) {
   const pathname = usePathname();
   const devBypass = useDevBypass();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    if (!browse) return;
+    const onScroll = () => setScrolled(window.scrollY > 32);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [browse]);
 
   return (
     <div className="relative min-h-screen">
       <div className="arcade-grid pointer-events-none fixed inset-0 z-0 opacity-25" />
 
-      <header className="sticky top-0 z-40 border-b border-neon-cyan/15 bg-void/75 backdrop-blur-xl">
+      <header
+        className={cn(
+          "z-40 transition-colors duration-300",
+          browse
+            ? cn(
+                "fixed inset-x-0",
+                devBypass ? "top-9" : "top-0",
+                scrolled
+                  ? "border-b border-neon-cyan/15 bg-void/85 backdrop-blur-xl"
+                  : "border-transparent bg-gradient-to-b from-void via-void/70 to-transparent",
+              )
+            : "sticky top-0 border-b border-neon-cyan/15 bg-void/75 backdrop-blur-xl",
+        )}
+      >
         <div className="mx-auto flex max-w-[1600px] items-center justify-between px-4 py-3 md:px-8">
           <Link href="/hub" className="flex items-center gap-3">
             <div className="rounded-lg border border-neon-cyan/30 bg-neon-cyan/10 p-2">
@@ -63,22 +86,28 @@ export function HubShell({
             </div>
           </Link>
 
-          <nav className="hidden items-center gap-2 md:flex">
-            {links.map(({ href, label, icon: Icon }) => (
-              <Link
-                key={href}
-                href={href}
-                className={cn(
-                  "flex items-center gap-2 rounded-full px-4 py-2 text-sm transition",
-                  pathname.startsWith(href)
-                    ? "bg-neon-cyan/15 text-neon-cyan"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <Icon className="size-4" />
-                {label}
-              </Link>
-            ))}
+          <nav className="hidden items-center gap-1 lg:flex">
+            {links.map(({ href, label, icon: Icon }) => {
+              const active =
+                href.includes("#")
+                  ? false
+                  : pathname.startsWith(href);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={cn(
+                    "flex items-center gap-2 rounded-full px-4 py-2 text-sm transition",
+                    active
+                      ? "bg-neon-cyan/15 text-neon-cyan"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <Icon className="size-4" />
+                  {label}
+                </Link>
+              );
+            })}
             <CompanionTrigger />
           </nav>
 
@@ -97,27 +126,27 @@ export function HubShell({
           )}
         </div>
 
-        <div className="overflow-hidden border-t border-neon-cyan/10 bg-black/25 py-1.5">
-          <p className="font-pixel animate-marquee text-[9px] tracking-widest text-neon-cyan/80 whitespace-nowrap">
+        <div className="overflow-hidden border-t border-neon-cyan/10 bg-black/30 py-1.5">
+          <p className="font-pixel animate-marquee text-[9px] tracking-widest text-neon-cyan/85 whitespace-nowrap">
             HUB-GAMES • O ARCADE DOS NERDS • CONTINUE? • FAIR PLAY • 1 CREDIT • HIGH SCORE • INSERT COIN •{" "}
             HUB-GAMES • O ARCADE DOS NERDS • CONTINUE? • FAIR PLAY • 1 CREDIT • HIGH SCORE • INSERT COIN •
           </p>
         </div>
 
-        <nav className="flex gap-2 border-t border-neon-cyan/10 px-4 py-2 md:hidden">
+        <nav className="flex gap-2 border-t border-white/5 px-4 py-2 lg:hidden">
           {links.map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
               href={href}
               className={cn(
-                "flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-xs",
-                pathname.startsWith(href)
+                "flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-[11px]",
+                pathname.startsWith(href.replace("#continuar", ""))
                   ? "bg-neon-cyan/15 text-neon-cyan"
                   : "text-muted-foreground",
               )}
             >
               <Icon className="size-4" />
-              {label}
+              {label === "Continuar jogando" ? "Continuar" : label}
             </Link>
           ))}
           <CompanionTrigger mobile />
@@ -142,9 +171,7 @@ function CompanionTrigger({ mobile = false }: { mobile?: boolean }) {
       <SheetTrigger
         className={cn(
           "flex items-center justify-center gap-2 rounded-full text-sm text-muted-foreground transition hover:text-neon-magenta",
-          mobile
-            ? "flex-1 rounded-lg py-2 text-xs"
-            : "px-4 py-2",
+          mobile ? "flex-1 rounded-lg py-2 text-[11px]" : "px-4 py-2",
         )}
       >
         <Bot className="size-4 text-neon-magenta" />

@@ -23,6 +23,8 @@ type GameItem = {
   communityScore: number | null;
   communityTake: string;
   monetization: Monetization;
+  pitch?: string;
+  posterUrl?: string;
   userEntry: {
     status: LibraryStatus;
     personalScore: number | null;
@@ -191,6 +193,8 @@ export function LibraryExplorer({
             title={game.title}
             coverUrl={game.coverUrl}
             synopsis={game.synopsis}
+            pitch={game.pitch}
+            posterUrl={game.posterUrl}
             releaseYear={game.releaseYear}
             communityScore={game.communityScore}
             personalScore={game.userEntry?.personalScore}

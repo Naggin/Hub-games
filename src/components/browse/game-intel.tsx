@@ -4,6 +4,7 @@ import { formatScore } from "@/lib/constants";
 import { monetizationCopy, type Monetization } from "@/lib/games/catalog";
 
 export function GameIntel({
+  pitch,
   synopsis,
   communityScore,
   communityReviewCount,
@@ -13,6 +14,7 @@ export function GameIntel({
   metacritic,
   platforms,
 }: {
+  pitch?: string;
   synopsis: string;
   communityScore: number | null;
   communityReviewCount: number;
@@ -28,7 +30,12 @@ export function GameIntel({
     <div className="grid gap-4 md:grid-cols-3">
       <Card className="border-neon-cyan/15 bg-card/50 p-5">
         <p className="font-pixel text-[9px] text-neon-cyan">O QUE É</p>
-        <p className="mt-3 leading-relaxed text-muted-foreground">{synopsis}</p>
+        {pitch && (
+          <p className="mt-3 text-base font-medium leading-snug">{pitch}</p>
+        )}
+        {(!pitch || synopsis.trim() !== pitch.trim()) && (
+          <p className="mt-3 leading-relaxed text-muted-foreground">{synopsis}</p>
+        )}
         {platforms && platforms.length > 0 && (
           <p className="mt-4 text-xs text-muted-foreground">
             {platforms.slice(0, 4).join(" · ")}
@@ -60,7 +67,7 @@ export function GameIntel({
       </Card>
 
       <Card className="border-neon-gold/20 bg-card/50 p-5">
-        <p className="font-pixel text-[9px] text-neon-gold">CAIXA</p>
+        <p className="font-pixel text-[9px] text-neon-gold">PAY TO WIN?</p>
         <div className="mt-3">
           <MonetizationBadge monetization={monetization} />
         </div>

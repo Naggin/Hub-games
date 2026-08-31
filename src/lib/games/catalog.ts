@@ -553,11 +553,180 @@ export function getCatalogIdentity(game: CatalogGameInput): CatalogIdentity {
   };
 }
 
-export function withCatalogIdentity<T extends CatalogGameInput>(game: T) {
+export function enrichGame<T extends CatalogGameInput>(game: T) {
   return {
     ...game,
     ...getCatalogIdentity(game),
   };
 }
 
-export type GameIdentity = ReturnType<typeof withCatalogIdentity<CatalogGameInput>>;
+export const withCatalogIdentity = enrichGame;
+
+export type GameIdentity = ReturnType<typeof enrichGame<CatalogGameInput>>;
+
+export type Monetization = MonetizationKind;
+
+export const monetizationCopy: Record<
+  MonetizationKind,
+  { cabinet: string; label: string; className: string; blurb: string }
+> = {
+  fair: {
+    cabinet: "SEM P2W",
+    label: "Sem P2W",
+    className: "border-emerald-400/60 bg-emerald-400/10 text-emerald-400",
+    blurb: "Jogo honesto. Você paga o game, não o poder.",
+  },
+  cosmetics: {
+    cabinet: "SÓ COSMÉTICO",
+    label: "Só cosmético",
+    className: "border-neon-cyan/60 bg-neon-cyan/10 text-neon-cyan",
+    blurb: "A loja vende visual. No gameplay, skill que manda.",
+  },
+  gacha: {
+    cabinet: "GACHA",
+    label: "Gacha",
+    className: "border-neon-magenta/60 bg-neon-magenta/10 text-neon-magenta",
+    blurb: "Banner e pity. Dá pra jogar de graça — o maxo cobra.",
+  },
+  pay_to_win: {
+    cabinet: "PAY TO WIN",
+    label: "Pay to win",
+    className: "border-destructive/70 bg-destructive/10 text-destructive",
+    blurb: "Quem paga avança. A comunidade avisa antes de você meter a mão.",
+  },
+};
+
+export function getCatalogIntel(game: CatalogGameInput) {
+  return getCatalogIdentity(game);
+}
+
+export type BrowseGame = {
+  id: string;
+  slug: string;
+  title: string;
+  synopsis: string;
+  coverUrl: string;
+  releaseYear: number | null;
+  genres: string[];
+  communityScore: number | null;
+  communityTake: string;
+  monetization: MonetizationKind;
+  pitch?: string;
+  posterUrl?: string;
+  backdropUrl?: string;
+  personalScore?: number | null;
+  status?: string | null;
+  userEntry?: {
+    status?: string | null;
+    personalScore?: number | null;
+  } | null;
+};
+
+export type CatalogRowDef = {
+  id: string;
+  cabinet: string;
+  title: string;
+  games: BrowseGame[];
+};
+
+const GENRE_ROWS = [
+  "RPG",
+  "Soulslike",
+  "Ação",
+  "Indie",
+  "Horror",
+  "FPS",
+  "Aventura",
+  "Estratégia",
+] as const;
+
+export function buildCatalogRows(
+  games: BrowseGame[],
+  playing: BrowseGame[],
+): CatalogRowDef[] {
+  const rows: CatalogRowDef[] = [];
+
+  if (playing.length > 0) {
+    rows.push({
+      id: "continuar",
+      cabinet: "CONTINUE?",
+      title: "Continuar jogando",
+      games: playing,
+    });
+  }
+
+  const trending = [...games]
+    .sort((a, b) => (b.communityScore ?? 0) - (a.communityScore ?? 0))
+    .slice(0, 18);
+  if (trending.length > 0) {
+    rows.push({
+      id: "trending",
+      cabinet: "HIGH SCORE",
+      title: "Em alta na comunidade",
+      games: trending,
+    });
+  }
+
+  const fair = games.filter((game) => game.monetization === "fair").slice(0, 18);
+  if (fair.length > 0) {
+    rows.push({
+      id: "fair",
+      cabinet: "FAIR PLAY",
+      title: "Sem pay to win",
+      games: fair,
+    });
+  }
+
+  const cosmetics = games
+    .filter((game) => game.monetization === "cosmetics")
+    .slice(0, 18);
+  if (cosmetics.length > 0) {
+    rows.push({
+      id: "cosmetics",
+      cabinet: "SKINS ONLY",
+      title: "Só cosmético",
+      games: cosmetics,
+    });
+  }
+
+  const gacha = games.filter((game) => game.monetization === "gacha");
+  if (gacha.length > 0) {
+    rows.push({
+      id: "gacha",
+      cabinet: "BANNER",
+      title: "Gacha — a casa avisa",
+      games: gacha,
+    });
+  }
+
+  const payToWin = games.filter((game) => game.monetization === "pay_to_win");
+  if (payToWin.length > 0) {
+    rows.push({
+      id: "p2w",
+      cabinet: "CUIDADO",
+      title: "Pay to win",
+      games: payToWin,
+    });
+  }
+
+  for (const genre of GENRE_ROWS) {
+    const matches = games.filter((game) =>
+      game.genres.some((item) => {
+        if (genre === "Horror") {
+          return item.toLowerCase().includes("horror");
+        }
+        return item === genre;
+      }),
+    );
+    if (matches.length >= 4) {
+      rows.push({
+        id: `genre-${genre.toLowerCase()}`,
+        cabinet: "GÊNERO",
+        title: genre,
+        games: matches.slice(0, 16),
+      });
+    }
+  }
+
+  return rows;
+}
