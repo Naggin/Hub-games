@@ -126,12 +126,14 @@ export function HubShell({
           )}
         </div>
 
-        <div className="overflow-hidden border-t border-neon-cyan/10 bg-secondary/40 py-1.5">
-          <p className="font-pixel animate-marquee text-[9px] tracking-widest text-neon-cyan/85 whitespace-nowrap">
-            HUB-GAMES • O ARCADE DOS NERDS • CONTINUE? • FAIR PLAY • 1 CREDIT • HIGH SCORE • INSERT COIN •{" "}
-            HUB-GAMES • O ARCADE DOS NERDS • CONTINUE? • FAIR PLAY • 1 CREDIT • HIGH SCORE • INSERT COIN •
-          </p>
-        </div>
+        {!browse && (
+          <div className="overflow-hidden border-t border-neon-cyan/10 bg-secondary/40 py-1.5">
+            <p className="font-pixel animate-marquee text-[9px] tracking-widest text-neon-cyan/85 whitespace-nowrap">
+              HUB-GAMES • O ARCADE DOS NERDS • CONTINUE? • FAIR PLAY • 1 CREDIT • HIGH SCORE • INSERT COIN •{" "}
+              HUB-GAMES • O ARCADE DOS NERDS • CONTINUE? • FAIR PLAY • 1 CREDIT • HIGH SCORE • INSERT COIN •
+            </p>
+          </div>
+        )}
 
         <nav className="flex gap-2 border-t border-white/5 px-4 py-2 lg:hidden">
           {links.map(({ href, label, icon: Icon }) => (

@@ -1,9 +1,21 @@
-import Link from "next/link";
+"use client";
 
-import { isDevBypassEnabled } from "@/lib/env";
+import Link from "next/link";
+import { useSyncExternalStore } from "react";
+
+function useDevBypass() {
+  const getSnapshot = () => process.env.NEXT_PUBLIC_DEV_BYPASS === "true";
+
+  return useSyncExternalStore(
+    () => () => {},
+    getSnapshot,
+    getSnapshot,
+  );
+}
 
 export function DevModeBanner() {
-  if (!isDevBypassEnabled()) return null;
+  const bypass = useDevBypass();
+  if (!bypass) return null;
 
   return (
     <div className="flex h-9 items-center justify-center border-b border-neon-gold/30 bg-neon-gold/10 px-4 text-center text-xs text-neon-gold">
