@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
-import { Bot, Gamepad2, Home, Library, User } from "lucide-react";
+import { Bot, Gamepad2, Home, User } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { CompanionCabinet } from "@/components/companion/companion-cabinet";
@@ -19,9 +19,13 @@ import { cn } from "@/lib/utils";
 const links = [
   { href: "/hub", label: "Hub", icon: Home },
   { href: "/hub#continuar", label: "Continuar jogando", icon: Gamepad2 },
-  { href: "/library", label: "Biblioteca", icon: Library },
   { href: "/perfil", label: "Perfil", icon: User },
 ];
+
+function isNavActive(href: string, pathname: string) {
+  if (href.includes("#")) return false;
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 function useDevBypass() {
   const getSnapshot = () =>
@@ -89,10 +93,7 @@ export function HubShell({
 
           <nav className="hidden items-center gap-1 lg:flex">
             {links.map(({ href, label, icon: Icon }) => {
-              const active =
-                href.includes("#")
-                  ? false
-                  : pathname.startsWith(href);
+              const active = isNavActive(href, pathname);
               return (
                 <Link
                   key={href}
@@ -147,7 +148,7 @@ export function HubShell({
               href={href}
               className={cn(
                 "flex flex-1 flex-col items-center gap-0.5 rounded-lg py-1.5 text-[9px]",
-                pathname.startsWith(href.replace("#continuar", ""))
+                isNavActive(href, pathname)
                   ? "bg-neon-cyan/15 text-neon-cyan"
                   : "text-muted-foreground",
               )}

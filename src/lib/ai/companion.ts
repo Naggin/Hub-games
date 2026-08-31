@@ -41,7 +41,7 @@ export async function handleCompanionChat(
         ? `Platinum Hunter aqui. Vi sua pergunta sobre "${userText}". No dev mode, configure AI Gateway para respostas completas — mas seu backlog mock já tem Elden Ring em platina!`
         : persona === "coach"
           ? `Coach: você tem The Witcher 3 em JOGANDO. Quer marcar como zerou hoje?`
-          : `Recommender: com base no seu perfil, sugiro continuar The Witcher 3 ou explorar Hades na biblioteca.`;
+          : `Recommender: com base no seu perfil, sugiro continuar The Witcher 3 ou explorar Hades no cabinet.`;
 
     return createUIMessageStreamResponse({
       stream: new ReadableStream({

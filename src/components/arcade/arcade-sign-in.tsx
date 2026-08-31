@@ -80,7 +80,7 @@ export function ArcadeSignIn() {
               HUB-GAMES
             </h1>
             <p className="mt-4 max-w-md text-sm text-muted-foreground">
-              Seu save universal. Biblioteca, progresso, platinas e notas da
+              Seu save universal. Progresso, platinas e notas da
               comunidade — tudo num cabinet neon.
             </p>
           </motion.div>

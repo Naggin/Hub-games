@@ -1,5 +1,4 @@
-import Link from "next/link";
-
+import { CabinetSearch } from "@/components/browse/cabinet-search";
 import { CatalogRow } from "@/components/browse/catalog-row";
 import { TitleBillboard } from "@/components/browse/title-billboard";
 import { HubShell } from "@/components/layout/hub-shell";
@@ -44,9 +43,20 @@ function toBrowseGame(
   };
 }
 
-export default async function HubPage() {
+export default async function HubPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    q?: string;
+    status?: string;
+    genre?: string;
+    monetization?: string;
+  }>;
+}) {
   const userId = await getAuthUserId();
   if (!userId) return null;
+
+  const params = await searchParams;
 
   const [stats, playingRows, catalog] = await Promise.all([
     getUserStats(userId),
@@ -94,6 +104,11 @@ export default async function HubPage() {
     )[0];
 
   const rows = buildCatalogRows(games, playing);
+  const continuar = rows.find((row) => row.id === "continuar");
+  const rest = rows.filter((row) => row.id !== "continuar");
+  const allGenres = Array.from(
+    new Set(games.flatMap((game) => game.genres)),
+  ).slice(0, 12);
 
   return (
     <HubShell browse>
@@ -104,41 +119,44 @@ export default async function HubPage() {
           stats={stats}
         />
       ) : (
-        <Card className="mx-4 mt-8 border-dashed border-neon-cyan/20 bg-card/70 p-8 text-center md:mx-8">
+        <Card
+          id="continuar"
+          className="mx-4 mt-8 scroll-mt-28 border-dashed border-neon-cyan/20 bg-card/70 p-8 text-center md:mx-8"
+        >
           <p className="font-pixel text-[10px] text-neon-gold">NO GAME IN PLAY</p>
           <p className="mt-3 text-muted-foreground">
             Nada no cabinet.{" "}
-            <Link href="/library" className="text-neon-cyan hover:underline">
-              Escolha um jogo na biblioteca
-            </Link>{" "}
-            e marque como Jogando.
+            <a href="#buscar" className="text-neon-cyan hover:underline">
+              Busca um jogo aqui
+            </a>{" "}
+            e marca como Jogando.
           </p>
         </Card>
       )}
 
       <div className="relative space-y-10 py-10">
         {playing.length === 0 && featured && (
-          <div className="px-4 md:px-8">
+          <div id="continuar" className="scroll-mt-28 px-4 md:px-8">
             <Card className="border-dashed border-neon-cyan/20 bg-card/70 p-6">
               <p className="font-pixel text-[10px] text-neon-cyan">CONTINUE?</p>
               <p className="mt-2 text-sm text-muted-foreground">
                 Continuar jogando fica sempre no topo.{" "}
-                <Link href="/library" className="text-neon-cyan hover:underline">
-                  Insert coin na biblioteca
-                </Link>{" "}
+                <a href="#buscar" className="text-neon-cyan hover:underline">
+                  Insert coin no cabinet
+                </a>{" "}
                 e marca Jogando — um toque.
               </p>
             </Card>
           </div>
         )}
 
-        {rows.map((row) => (
+        {continuar && (
           <CatalogRow
-            key={row.id}
-            id={row.id}
-            cabinet={row.cabinet}
-            title={row.title}
-            games={row.games.map((game) => ({
+            key={continuar.id}
+            id={continuar.id}
+            cabinet={continuar.cabinet}
+            title={continuar.title}
+            games={continuar.games.map((game) => ({
               slug: game.slug,
               title: game.title,
               coverUrl: game.coverUrl,
@@ -154,7 +172,40 @@ export default async function HubPage() {
               genres: game.genres,
             }))}
           />
-        ))}
+        )}
+
+        <CabinetSearch
+          games={games}
+          genres={allGenres}
+          initialQuery={params.q ?? ""}
+          initialStatus={params.status ?? ""}
+          initialGenre={params.genre ?? ""}
+          initialMonetization={params.monetization ?? ""}
+        >
+          {rest.map((row) => (
+            <CatalogRow
+              key={row.id}
+              id={row.id}
+              cabinet={row.cabinet}
+              title={row.title}
+              games={row.games.map((game) => ({
+                slug: game.slug,
+                title: game.title,
+                coverUrl: game.coverUrl,
+                synopsis: game.synopsis,
+                pitch: game.pitch,
+                posterUrl: game.posterUrl,
+                releaseYear: game.releaseYear,
+                communityScore: game.communityScore,
+                personalScore: game.personalScore ?? game.userEntry?.personalScore,
+                communityTake: game.communityTake,
+                monetization: game.monetization,
+                status: game.status ?? game.userEntry?.status,
+                genres: game.genres,
+              }))}
+            />
+          ))}
+        </CabinetSearch>
       </div>
     </HubShell>
   );

@@ -49,9 +49,11 @@ Abra [http://localhost:3000](http://localhost:3000).
 |------|-----------|
 | `/sign-in` | Login arcade (insert coin) |
 | `/sign-up` | Cadastro NEW GAME |
-| `/hub` | Vitrine arcade — billboard, continuar jogando, filas e selo P2W |
-| `/library` | Catálogo com busca, filtros e caixa (fair/gacha/P2W) |
+| `/hub` | Vitrine + catálogo — billboard, continuar, busca/filtros e selo P2W |
+| `/hub?q=` | Deep-link de busca no cabinet |
+| `/library` | Redireciona para `/hub` (query string preservada) |
 | `/library/[slug]` | Ficha do cabinet: proposta, comunidade, P2W e ritual |
+| `/perfil` | Sala de troféus do player |
 
 ## Agentes Cursor
 
