@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { CoverImage } from "@/components/browse/cover-image";
+import { FichaDossier } from "@/components/browse/ficha-dossier";
 import { GameIntel } from "@/components/browse/game-intel";
 import { MonetizationBadge } from "@/components/browse/monetization-badge";
 import { HubShell } from "@/components/layout/hub-shell";
@@ -12,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { getAuthUserId } from "@/lib/auth";
 import { formatScore } from "@/lib/constants";
 import { getCatalogIntel } from "@/lib/games/catalog";
+import { resolveGameFicha } from "@/lib/games/ficha";
 import { getGameWithFullDetails } from "@/lib/games/queries";
 
 export default async function GameDetailPage({
@@ -39,6 +41,12 @@ export default async function GameDetailPage({
   const pitch = "pitch" in game ? game.pitch : intel.pitch;
   const backdropUrl =
     "backdropUrl" in game ? game.backdropUrl : intel.backdropUrl;
+  const ficha = resolveGameFicha({
+    slug: game.slug,
+    platforms: game.platforms,
+    steamAppId: game.steamAppId,
+    releaseYear: game.releaseYear,
+  });
 
   return (
     <HubShell browse>
@@ -76,6 +84,15 @@ export default async function GameDetailPage({
                 {genre}
               </Badge>
             ))}
+            {ficha.platforms.slice(0, 4).map((platform) => (
+              <Badge
+                key={platform}
+                variant="outline"
+                className="border-neon-cyan/30 text-neon-cyan"
+              >
+                {platform}
+              </Badge>
+            ))}
           </div>
           <p className="mt-4 text-sm">
             Comunidade{" "}
@@ -99,8 +116,10 @@ export default async function GameDetailPage({
           monetization={monetization}
           personalScore={userEntry?.personalScore}
           metacritic={game.metacritic}
-          platforms={game.platforms}
+          platforms={ficha.platforms}
         />
+
+        <FichaDossier ficha={ficha} />
 
         <ProgressRitual
           gameId={game.id}
