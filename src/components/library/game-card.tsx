@@ -46,11 +46,7 @@ export function GameCard({
   genres = [],
 }: GameCardProps) {
   return (
-    <Link
-      href={`/library/${slug}`}
-      transitionTypes={["nav-forward"]}
-      className="group block h-full"
-    >
+    <Link href={`/library/${slug}`} className="group block h-full">
       <motion.div
         whileHover={{ y: -6 }}
         whileTap={{ scale: 0.985 }}

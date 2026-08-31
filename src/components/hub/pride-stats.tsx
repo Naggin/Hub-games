@@ -106,7 +106,7 @@ export function PrideStats({ stats }: { stats: Stats }) {
             </span>
             <span className="flex items-center gap-2">
               <span className="size-2 rounded-full bg-secondary" />
-              {Math.max(0, stats.total - stats.beaten)} na fila
+              {Math.max(0, stats.total - stats.beaten)} ainda sem zerar
             </span>
           </div>
         </Card>

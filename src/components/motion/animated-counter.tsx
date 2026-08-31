@@ -11,7 +11,7 @@ import {
 
 export function AnimatedCounter({
   value,
-  duration = 0.9,
+  duration = 1.1,
 }: {
   value: number;
   duration?: number;

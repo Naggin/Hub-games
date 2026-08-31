@@ -181,55 +181,9 @@
   animation-name: morph-blur;
 }
 
-::view-transition-old(.nav-forward) {
-  --slide-offset: -48px;
-  animation:
-    140ms ease-in both vt-fade reverse,
-    380ms ease-in-out both vt-slide reverse;
-}
-
-::view-transition-new(.nav-forward) {
-  --slide-offset: 48px;
-  animation:
-    200ms ease-out 140ms both vt-fade,
-    380ms ease-in-out both vt-slide;
-}
-
-::view-transition-old(.nav-back) {
-  --slide-offset: 48px;
-  animation:
-    140ms ease-in both vt-fade reverse,
-    380ms ease-in-out both vt-slide reverse;
-}
-
-::view-transition-new(.nav-back) {
-  --slide-offset: -48px;
-  animation:
-    200ms ease-out 140ms both vt-fade,
-    380ms ease-in-out both vt-slide;
-}
-
 @keyframes morph-blur {
   30% {
     filter: blur(3px);
-  }
-}
-
-@keyframes vt-fade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes vt-slide {
-  from {
-    translate: var(--slide-offset);
-  }
-  to {
-    translate: 0;
   }
 }
 

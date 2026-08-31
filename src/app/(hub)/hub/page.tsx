@@ -17,11 +17,16 @@ export default async function HubPage() {
   const userId = await getAuthUserId();
   if (!userId) return null;
 
-  const [stats, playing, recent] = await Promise.all([
+  const [stats, playing, catalog] = await Promise.all([
     getUserStats(userId),
     getPlayingGamesWithDetails(userId),
-    getGamesWithStats(userId, { limit: 8 }),
+    getGamesWithStats(userId, { limit: 12 }),
   ]);
+
+  const playingSlugs = new Set(playing.map(({ game }) => game.slug));
+  const discover = catalog
+    .filter((game) => !playingSlugs.has(game.slug))
+    .slice(0, 4);
 
   return (
     <div className="space-y-10">
@@ -89,7 +94,7 @@ export default async function HubPage() {
             </Link>
           </div>
           <Stagger className="grid gap-4 sm:grid-cols-2">
-            {recent.slice(0, 4).map((game) => (
+            {discover.map((game) => (
               <StaggerItem key={game.id}>
                 <GameCard
                   slug={game.slug}

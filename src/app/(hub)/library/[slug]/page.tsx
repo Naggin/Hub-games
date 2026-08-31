@@ -34,7 +34,6 @@ export default async function GameDetailPage({
     <div className="space-y-6">
       <Link
         href="/library"
-        transitionTypes={["nav-back"]}
         className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-neon-cyan"
       >
         <ArrowLeft className="size-4" />
