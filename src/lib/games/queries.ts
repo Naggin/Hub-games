@@ -789,6 +789,14 @@ export async function applySteamImportPlan(
   items: ImportPlanItem[],
 ) {
   for (const item of items) {
+    if (isMockDbEnabled()) {
+      mock.patchMockLibrary(userId, item.slug, {
+        status: item.status,
+        hoursPlayed: item.hoursPlayed,
+      });
+      continue;
+    }
+
     await upsertLibraryEntry(userId, item.gameId, {
       status: item.status,
       hoursPlayed: item.hoursPlayed,
