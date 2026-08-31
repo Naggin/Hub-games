@@ -1,5 +1,5 @@
 import { LibraryExplorer } from "@/components/library/library-explorer";
-import { HubShell } from "@/components/layout/hub-shell";
+import { Reveal } from "@/components/motion/reveal";
 import { getAuthUserId } from "@/lib/auth";
 import { getGamesWithStats } from "@/lib/games/queries";
 
@@ -24,8 +24,8 @@ export default async function LibraryPage({
   ).slice(0, 12);
 
   return (
-    <HubShell>
-      <div className="space-y-8">
+    <div className="space-y-8">
+      <Reveal>
         <section>
           <p className="font-pixel text-[10px] text-neon-magenta">BIBLIOTECA</p>
           <h1 className="text-3xl font-semibold tracking-tight">
@@ -35,15 +35,15 @@ export default async function LibraryPage({
             {games.length} jogos no hub — busque, filtre e marque seu progresso.
           </p>
         </section>
+      </Reveal>
 
-        <LibraryExplorer
-          games={games}
-          genres={allGenres}
-          initialQuery={params.q ?? ""}
-          initialStatus={params.status ?? ""}
-          initialGenre={params.genre ?? ""}
-        />
-      </div>
-    </HubShell>
+      <LibraryExplorer
+        games={games}
+        genres={allGenres}
+        initialQuery={params.q ?? ""}
+        initialStatus={params.status ?? ""}
+        initialGenre={params.genre ?? ""}
+      />
+    </div>
   );
 }

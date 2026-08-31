@@ -2,8 +2,8 @@ import Link from "next/link";
 import { Trophy, Gamepad2, Star, Clock } from "lucide-react";
 
 import { CompanionCabinet } from "@/components/companion/companion-cabinet";
-import { HubShell } from "@/components/layout/hub-shell";
 import { GameCard } from "@/components/library/game-card";
+import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { Card } from "@/components/ui/card";
 import { getAuthUserId } from "@/lib/auth";
 import {
@@ -30,8 +30,8 @@ export default async function HubPage() {
   ];
 
   return (
-    <HubShell>
-      <div className="space-y-10">
+    <div className="space-y-10">
+      <Reveal>
         <section className="space-y-2">
           <p className="font-pixel text-[10px] text-neon-cyan">BEM-VINDO DE VOLTA</p>
           <h1 className="text-3xl font-semibold tracking-tight">
@@ -41,12 +41,13 @@ export default async function HubPage() {
             Seu ritual começa aqui — um toque pra atualizar o save.
           </p>
         </section>
+      </Reveal>
 
-        {playing.length > 0 ? (
-          <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {playing.map(({ game, entry }) => (
+      {playing.length > 0 ? (
+        <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {playing.map(({ game, entry }) => (
+            <StaggerItem key={game.id}>
               <GameCard
-                key={game.id}
                 slug={game.slug}
                 title={game.title}
                 coverUrl={game.coverUrl}
@@ -55,9 +56,11 @@ export default async function HubPage() {
                 personalScore={entry.personalScore}
                 genres={game.genres}
               />
-            ))}
-          </section>
-        ) : (
+            </StaggerItem>
+          ))}
+        </Stagger>
+      ) : (
+        <Reveal>
           <Card className="border-dashed border-neon-cyan/20 bg-card/40 p-8 text-center">
             <p className="text-muted-foreground">
               Nada em andamento.{" "}
@@ -67,14 +70,13 @@ export default async function HubPage() {
               e marque como Jogando.
             </p>
           </Card>
-        )}
+        </Reveal>
+      )}
 
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {statCards.map(({ label, value, icon: Icon, color }) => (
-            <Card
-              key={label}
-              className="border-neon-cyan/10 bg-card/50 p-5"
-            >
+      <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {statCards.map(({ label, value, icon: Icon, color }) => (
+          <StaggerItem key={label}>
+            <Card className="border-neon-cyan/10 bg-card/50 p-5">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">{label}</p>
@@ -83,24 +85,25 @@ export default async function HubPage() {
                 <Icon className={`size-8 ${color}`} />
               </div>
             </Card>
-          ))}
-        </section>
+          </StaggerItem>
+        ))}
+      </Stagger>
 
-        <section className="grid gap-8 lg:grid-cols-3">
-          <div className="space-y-4 lg:col-span-2">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Descobrir na biblioteca</h2>
-              <Link
-                href="/library"
-                className="text-sm text-neon-cyan hover:underline"
-              >
-                Ver tudo
-              </Link>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {recent.slice(0, 4).map((game) => (
+      <section className="grid gap-8 lg:grid-cols-3">
+        <div className="space-y-4 lg:col-span-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Descobrir na biblioteca</h2>
+            <Link
+              href="/library"
+              className="text-sm text-neon-cyan hover:underline"
+            >
+              Ver tudo
+            </Link>
+          </div>
+          <Stagger className="grid gap-4 sm:grid-cols-2">
+            {recent.slice(0, 4).map((game) => (
+              <StaggerItem key={game.id}>
                 <GameCard
-                  key={game.id}
                   slug={game.slug}
                   title={game.title}
                   coverUrl={game.coverUrl}
@@ -110,13 +113,13 @@ export default async function HubPage() {
                   status={game.userEntry?.status}
                   genres={game.genres}
                 />
-              ))}
-            </div>
-          </div>
+              </StaggerItem>
+            ))}
+          </Stagger>
+        </div>
 
-          <CompanionCabinet />
-        </section>
-      </div>
-    </HubShell>
+        <CompanionCabinet />
+      </section>
+    </div>
   );
 }
