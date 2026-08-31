@@ -28,7 +28,7 @@ export function GameIntel({
 
   return (
     <div className="grid gap-4 md:grid-cols-3">
-      <Card className="border-neon-cyan/15 bg-card/50 p-5">
+      <Card className="border-neon-cyan/15 bg-card/70 p-5">
         <p className="font-pixel text-[9px] text-neon-cyan">O QUE É</p>
         {pitch && (
           <p className="mt-3 text-base font-medium leading-snug">{pitch}</p>
@@ -43,7 +43,7 @@ export function GameIntel({
         )}
       </Card>
 
-      <Card className="border-neon-magenta/20 bg-card/50 p-5">
+      <Card className="border-neon-magenta/20 bg-card/70 p-5">
         <p className="font-pixel text-[9px] text-neon-magenta">A GALERA</p>
         <p className="mt-3 text-2xl font-semibold text-neon-cyan">
           {formatScore(communityScore)}
@@ -66,7 +66,7 @@ export function GameIntel({
         </blockquote>
       </Card>
 
-      <Card className="border-neon-gold/20 bg-card/50 p-5">
+      <Card className="border-neon-gold/20 bg-card/70 p-5">
         <p className="font-pixel text-[9px] text-neon-gold">PAY TO WIN?</p>
         <div className="mt-3">
           <MonetizationBadge monetization={monetization} />

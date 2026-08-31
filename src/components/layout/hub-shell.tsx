@@ -55,7 +55,7 @@ export function HubShell({
 
   return (
     <div className="relative min-h-screen">
-      <div className="arcade-grid pointer-events-none fixed inset-0 z-0 opacity-25" />
+      <div className="arcade-grid pointer-events-none fixed inset-0 z-0 opacity-40" />
 
       <header
         className={cn(
@@ -65,10 +65,10 @@ export function HubShell({
                 "fixed inset-x-0",
                 devBypass ? "top-9" : "top-0",
                 scrolled
-                  ? "border-b border-neon-cyan/15 bg-void/85 backdrop-blur-xl"
-                  : "border-transparent bg-gradient-to-b from-void via-void/70 to-transparent",
+                  ? "border-b border-neon-cyan/15 bg-void/70 backdrop-blur-xl"
+                  : "border-transparent bg-gradient-to-b from-void/80 via-void/40 to-transparent",
               )
-            : "sticky top-0 border-b border-neon-cyan/15 bg-void/75 backdrop-blur-xl",
+            : "sticky top-0 border-b border-neon-cyan/15 bg-void/65 backdrop-blur-xl",
         )}
       >
         <div className="mx-auto flex max-w-[1600px] items-center justify-between px-4 py-3 md:px-8">
@@ -126,7 +126,7 @@ export function HubShell({
           )}
         </div>
 
-        <div className="overflow-hidden border-t border-neon-cyan/10 bg-black/30 py-1.5">
+        <div className="overflow-hidden border-t border-neon-cyan/10 bg-secondary/40 py-1.5">
           <p className="font-pixel animate-marquee text-[9px] tracking-widest text-neon-cyan/85 whitespace-nowrap">
             HUB-GAMES • O ARCADE DOS NERDS • CONTINUE? • FAIR PLAY • 1 CREDIT • HIGH SCORE • INSERT COIN •{" "}
             HUB-GAMES • O ARCADE DOS NERDS • CONTINUE? • FAIR PLAY • 1 CREDIT • HIGH SCORE • INSERT COIN •
@@ -179,7 +179,7 @@ function CompanionTrigger({ mobile = false }: { mobile?: boolean }) {
       </SheetTrigger>
       <SheetContent
         side="right"
-        className="w-full border-neon-cyan/20 bg-void p-0 sm:max-w-md"
+        className="w-full border-neon-cyan/20 bg-card p-0 sm:max-w-md"
       >
         <SheetHeader className="sr-only">
           <SheetTitle>Companheiro</SheetTitle>

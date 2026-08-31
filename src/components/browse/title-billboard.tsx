@@ -55,8 +55,8 @@ export function TitleBillboard({
         className="object-cover object-center scale-105"
         sizes="100vw"
       />
-      <div className="absolute inset-0 bg-gradient-to-r from-void via-void/85 to-void/20" />
-      <div className="absolute inset-0 bg-gradient-to-t from-void via-transparent to-void/55" />
+      <div className="absolute inset-0 bg-gradient-to-r from-void/88 via-void/40 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-void/80 via-transparent to-void/20" />
       <div className="scanlines pointer-events-none absolute inset-0 opacity-20" />
 
       <div className="relative z-10 mx-auto flex min-h-[82vh] max-w-7xl flex-col justify-end px-4 pb-10 pt-28 md:px-8 md:pb-14">
@@ -147,7 +147,7 @@ export function TitleBillboard({
           ].map(({ label, value, icon: Icon, tone }) => (
             <div
               key={label}
-              className="rounded-lg border border-neon-cyan/15 bg-void/60 px-3 py-2 backdrop-blur"
+              className="rounded-lg border border-neon-cyan/15 bg-card/70 px-3 py-2 backdrop-blur"
             >
               <dt className="flex items-center gap-2 text-[11px] text-muted-foreground">
                 <Icon className={`size-3.5 ${tone}`} />

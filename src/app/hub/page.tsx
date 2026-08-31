@@ -104,7 +104,7 @@ export default async function HubPage() {
           stats={stats}
         />
       ) : (
-        <Card className="mx-4 mt-8 border-dashed border-neon-cyan/20 bg-card/40 p-8 text-center md:mx-8">
+        <Card className="mx-4 mt-8 border-dashed border-neon-cyan/20 bg-card/70 p-8 text-center md:mx-8">
           <p className="font-pixel text-[10px] text-neon-gold">NO GAME IN PLAY</p>
           <p className="mt-3 text-muted-foreground">
             Nada no cabinet.{" "}
@@ -119,7 +119,7 @@ export default async function HubPage() {
       <div className="relative space-y-10 py-10">
         {playing.length === 0 && featured && (
           <div className="px-4 md:px-8">
-            <Card className="border-dashed border-neon-cyan/20 bg-card/40 p-6">
+            <Card className="border-dashed border-neon-cyan/20 bg-card/70 p-6">
               <p className="font-pixel text-[10px] text-neon-cyan">CONTINUE?</p>
               <p className="mt-2 text-sm text-muted-foreground">
                 Continuar jogando fica sempre no topo.{" "}

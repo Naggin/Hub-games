@@ -55,7 +55,7 @@ export function PosterCard({
     >
       <article
         className={cn(
-          "overflow-hidden rounded-xl border border-neon-cyan/15 bg-card/70 transition duration-300",
+          "overflow-hidden rounded-xl border border-neon-cyan/20 bg-card/85 transition duration-300",
           "group-hover:z-20 group-hover:border-neon-cyan/50 group-hover:box-glow-cyan",
           "group-focus-visible:border-neon-cyan/50",
         )}
@@ -76,7 +76,7 @@ export function PosterCard({
               isRow ? "184px" : "(max-width: 768px) 100vw, 33vw"
             }
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-void via-void/25 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-void/75 via-void/10 to-transparent" />
 
           <div className="absolute left-2 top-2">
             <MonetizationBadge monetization={monetization} size="sm" />
@@ -93,7 +93,7 @@ export function PosterCard({
             <Badge
               variant="outline"
               className={cn(
-                "absolute right-2 top-2 bg-void/70 backdrop-blur",
+                "absolute right-2 top-2 bg-card/80 backdrop-blur",
                 statusColors[status],
               )}
             >

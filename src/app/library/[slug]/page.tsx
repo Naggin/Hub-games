@@ -52,8 +52,8 @@ export default async function GameDetailPage({
           className="object-cover object-center"
           sizes="100vw"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-void via-void/80 to-void/30" />
-        <div className="absolute inset-0 bg-gradient-to-t from-void via-transparent to-void/40" />
+        <div className="absolute inset-0 bg-gradient-to-r from-void/85 via-void/35 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-void/75 via-transparent to-void/20" />
         <div className="scanlines pointer-events-none absolute inset-0 opacity-20" />
 
         <div className="relative z-10 mx-auto flex min-h-[70vh] max-w-7xl flex-col justify-end px-4 pb-10 pt-28 md:px-8">
@@ -125,7 +125,7 @@ export default async function GameDetailPage({
               {notes.slice(0, 8).map((note) => (
                 <Card
                   key={note.id}
-                  className="border-neon-magenta/10 bg-card/40 p-4"
+                  className="border-neon-magenta/10 bg-card/70 p-4"
                 >
                   <div className="mb-2 flex items-center justify-between text-sm">
                     <span className="text-neon-magenta">

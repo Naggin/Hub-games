@@ -99,7 +99,7 @@ export function LibraryExplorer({
               if (e.key === "Enter") updateFilters({ q: query });
             }}
             placeholder="Buscar jogo..."
-            className="border-neon-cyan/20 bg-card/50 pl-10"
+            className="border-neon-cyan/20 bg-card/80 pl-10"
           />
         </div>
         <button

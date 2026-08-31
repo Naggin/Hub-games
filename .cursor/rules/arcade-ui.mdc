@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Arcade UI
 
-- Fundo void `#05040a`; acentos neon ciano, magenta, ouro.
+- Fundo void `#171428` (piso arcade iluminado, não caverna); acentos neon ciano, magenta, ouro.
 - Fonte pixel (Press Start 2P) só em marcas e CTAs; corpo legível (Geist/Outfit).
 - Scanline muito leve no login; glow nos cards ao hover.
 - Respeitar `prefers-reduced-motion`: desligar partículas, scanline e parallax.

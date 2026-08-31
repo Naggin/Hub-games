@@ -87,7 +87,7 @@ export function ArcadeBackgroundInner() {
 
 export function MarqueeTitle({ text }: { text: string }) {
   return (
-    <div className="overflow-hidden border-y border-neon-cyan/20 bg-black/30 py-3">
+    <div className="overflow-hidden border-y border-neon-cyan/20 bg-secondary/40 py-3">
       <motion.div
         animate={{ x: ["0%", "-50%"] }}
         transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
