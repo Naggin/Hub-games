@@ -20,6 +20,8 @@ export type CabinetView = {
   genrePool: string[];
   pinned: RankedCabinetGame[];
   showcase: RankedCabinetGame[];
+  nowPlaying: RankedCabinetGame[];
+  backlog: RankedCabinetGame[];
   ranks: {
     platinum: RankedCabinetGame[];
     beaten: RankedCabinetGame[];

@@ -671,6 +671,7 @@ export type RankedGame = {
   personalScore: number | null;
   communityScore: number | null;
   status: LibraryStatus | null;
+  hoursPlayed?: number | null;
 };
 
 export async function getProfileCabinet(userId: string) {
@@ -682,19 +683,24 @@ export async function getProfileCabinet(userId: string) {
 
   const bySlug = new Map(gamesList.map((game) => [game.slug, game]));
 
+  function toRanked(game: NonNullable<ReturnType<typeof bySlug.get>>): RankedGame {
+    return {
+      slug: game.slug,
+      title: game.title,
+      coverUrl: game.coverUrl,
+      posterUrl: game.posterUrl,
+      personalScore: game.userEntry?.personalScore ?? null,
+      communityScore: game.communityScore,
+      status: game.userEntry?.status ?? null,
+      hoursPlayed: game.userEntry?.hoursPlayed ?? null,
+    };
+  }
+
   function resolveList(slugs: string[]): RankedGame[] {
     return slugs
       .map((slug) => bySlug.get(slug))
       .filter((game): game is NonNullable<typeof game> => Boolean(game))
-      .map((game) => ({
-        slug: game.slug,
-        title: game.title,
-        coverUrl: game.coverUrl,
-        posterUrl: game.posterUrl,
-        personalScore: game.userEntry?.personalScore ?? null,
-        communityScore: game.communityScore,
-        status: game.userEntry?.status ?? null,
-      }));
+      .map(toRanked);
   }
 
   const library = gamesList.filter((game) => game.userEntry);
@@ -712,15 +718,13 @@ export async function getProfileCabinet(userId: string) {
     return Boolean(game.userEntry);
   });
 
-  const showcase = beatenEligible.map((game) => ({
-    slug: game.slug,
-    title: game.title,
-    coverUrl: game.coverUrl,
-    posterUrl: game.posterUrl,
-    status: game.userEntry?.status ?? null,
-    personalScore: game.userEntry?.personalScore ?? null,
-    communityScore: game.communityScore,
-  }));
+  const showcase = beatenEligible.map(toRanked);
+  const nowPlaying = library
+    .filter((game) => game.userEntry?.status === "playing")
+    .map(toRanked);
+  const backlog = library
+    .filter((game) => game.userEntry?.status === "wishlist")
+    .map(toRanked);
 
   const pinned = resolveList(profile.pinnedSlugs);
 
@@ -735,6 +739,8 @@ export async function getProfileCabinet(userId: string) {
     genrePool,
     pinned,
     showcase,
+    nowPlaying,
+    backlog,
     ranks: {
       platinum: resolveList(profile.platinumRank),
       beaten: resolveList(profile.beatenRank),

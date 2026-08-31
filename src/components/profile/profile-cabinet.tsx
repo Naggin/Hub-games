@@ -52,6 +52,8 @@ export function ProfileCabinet(props: ProfileCabinetProps) {
         genrePool: props.genrePool,
         pinned: props.pinned,
         showcase: props.showcase,
+        nowPlaying: [],
+        backlog: [],
         ranks: props.ranks,
         candidates: props.candidates,
       }}

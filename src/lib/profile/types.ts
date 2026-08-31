@@ -47,6 +47,7 @@ export type RankedCabinetGame = {
   personalScore: number | null;
   communityScore: number | null;
   status: string | null;
+  hoursPlayed?: number | null;
 };
 
 export type RankCandidate = { slug: string; title: string };
