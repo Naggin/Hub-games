@@ -57,4 +57,10 @@ Abra [http://localhost:3000](http://localhost:3000).
 
 ## Agentes Cursor
 
-Veja [AGENTS.md](./AGENTS.md) e `.cursor/skills/` para skills de player-lens, arcade-visual, progress-rituals e companion-voice.
+O Hub-games traz um kit para deixar o cabinet **legal e confortável** — ver [AGENTS.md](./AGENTS.md).
+
+**Skills** (`.cursor/skills/`): `player-lens`, `arcade-visual`, `progress-rituals`, `companion-voice`, `comfort-atmosphere`.
+
+**Subagentes** (`.cursor/agents/`): `hub-comfort` (curadoria), `arcade-stylist` (visual), `player-ritual` (progresso), `companion-writer` (tom do chat).
+
+Peça no Agent, por exemplo: *"roda o hub-comfort nessa tela"* ou *"usa o arcade-stylist no login"*.
