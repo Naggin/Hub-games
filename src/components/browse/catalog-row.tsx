@@ -1,10 +1,12 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 import { useRef } from "react";
 
 import { PosterCard, type PosterCardProps } from "@/components/browse/poster-card";
 import { Button } from "@/components/ui/button";
+import { posterItem, posterItemStatic, posterStagger } from "@/lib/motion";
 
 export function CatalogRow({
   id,
@@ -18,6 +20,8 @@ export function CatalogRow({
   games: PosterCardProps[];
 }) {
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const reducedMotion = useReducedMotion();
+  const itemVariants = reducedMotion ? posterItemStatic : posterItem;
 
   function scroll(direction: "left" | "right") {
     const node = scrollerRef.current;
@@ -63,14 +67,20 @@ export function CatalogRow({
         </div>
       </div>
 
-      <div
+      <motion.div
         ref={scrollerRef}
         className="hide-scrollbar flex gap-3 overflow-x-auto px-4 pb-2 pt-1 snap-x snap-mandatory md:px-8"
+        variants={posterStagger}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, amount: 0.2 }}
       >
         {games.map((game) => (
-          <PosterCard key={game.slug} variant="row" {...game} />
+          <motion.div key={game.slug} className="shrink-0" variants={itemVariants}>
+            <PosterCard variant="row" {...game} />
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </section>
   );
 }

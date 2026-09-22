@@ -93,7 +93,7 @@ export function PosterCard({
             <Badge
               variant="outline"
               className={cn(
-                "absolute right-2 top-2 bg-card/80 backdrop-blur",
+                "absolute right-2 top-2 bg-card/80 font-sans backdrop-blur",
                 statusColors[status],
               )}
             >

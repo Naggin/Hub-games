@@ -6,6 +6,15 @@ export const statusLabels: Record<string, string> = {
   dropped: "Abandonei",
 };
 
+/** Short PT-BR ask the companion uses — never persists status. */
+export const statusProposalAsk: Record<string, string> = {
+  wishlist: "Manda pra Quero jogar?",
+  playing: "Quer cravar Jogando?",
+  beaten: "Quer cravar Zerei?",
+  platinum: "Quer cravar Platinei?",
+  dropped: "Manda pra Abandonei?",
+};
+
 export const statusColors: Record<string, string> = {
   wishlist: "border-neon-magenta/50 text-neon-magenta",
   playing: "border-neon-cyan/50 text-neon-cyan",

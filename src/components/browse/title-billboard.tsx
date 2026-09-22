@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { Play, Trophy, Star, Clock, ListTodo } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 
 import { CoverImage } from "@/components/browse/cover-image";
 import { MonetizationBadge } from "@/components/browse/monetization-badge";
@@ -9,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { formatScore } from "@/lib/constants";
 import { monetizationCopy, type Monetization } from "@/lib/games/catalog";
 import type { LibraryStatus } from "@/lib/db/schema";
+import { fadeIn, kenBurns } from "@/lib/motion";
 
 type BillboardGame = {
   id: string;
@@ -44,23 +48,46 @@ export function TitleBillboard({
 }) {
   const copy = monetizationCopy[game.monetization];
   const pitch = game.pitch || game.synopsis;
+  const reducedMotion = useReducedMotion();
 
   return (
     <section className="relative isolate min-h-[82vh] overflow-hidden border-b border-neon-cyan/20">
-      <CoverImage
-        src={game.backdropUrl || game.coverUrl}
-        fallbackSrc={game.coverUrl}
-        alt=""
-        fill
-        priority
-        className="object-cover object-center scale-105"
-        sizes="100vw"
-      />
+      <div className="absolute inset-0 overflow-hidden">
+        <motion.div
+          key={game.slug}
+          className="absolute inset-0 origin-center"
+          initial={reducedMotion ? { opacity: 1, scale: 1.05 } : { opacity: 0, scale: 1.05 }}
+          animate={
+            reducedMotion
+              ? { opacity: 1, scale: 1.05 }
+              : { opacity: 1, scale: [1.05, 1.14, 1.05] }
+          }
+          transition={
+            reducedMotion
+              ? fadeIn
+              : { opacity: fadeIn, scale: kenBurns }
+          }
+        >
+          <CoverImage
+            src={game.backdropUrl || game.coverUrl}
+            fallbackSrc={game.coverUrl}
+            alt=""
+            fill
+            priority
+            className="object-cover object-center"
+            sizes="100vw"
+          />
+        </motion.div>
+      </div>
       <div className="absolute inset-0 bg-gradient-to-r from-void/88 via-void/40 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-t from-void/80 via-transparent to-void/20" />
-      <div className="scanlines pointer-events-none absolute inset-0 opacity-20" />
 
-      <div className="relative z-10 mx-auto flex min-h-[82vh] max-w-7xl flex-col justify-end px-4 pb-10 pt-28 md:px-8 md:pb-14">
+      <motion.div
+        className="relative z-10 mx-auto flex min-h-[82vh] max-w-7xl flex-col justify-end px-4 pb-10 pt-28 md:px-8 md:pb-14"
+        initial={reducedMotion ? false : { opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={fadeIn}
+      >
         <p className="font-pixel text-[10px] text-neon-gold text-glow-gold">
           {isPlaying ? "NOW PLAYING" : "FEATURED CABINET"}
         </p>
@@ -184,7 +211,7 @@ export function TitleBillboard({
             </Link>
           ))}
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }

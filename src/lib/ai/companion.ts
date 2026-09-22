@@ -2,20 +2,28 @@ import { streamText, tool, convertToModelMessages, type UIMessage } from "ai";
 import { z } from "zod";
 
 import { getAuthUserId } from "@/lib/auth";
+import { statusLabels, statusProposalAsk } from "@/lib/constants";
 import type { LibraryStatus } from "@/lib/db/schema";
 import {
   getPlayingGamesWithDetails,
   getUserLibrary,
   getUserStats,
   searchGames,
-  upsertLibraryEntry,
 } from "@/lib/games/queries";
 import { isMockDbEnabled } from "@/lib/games/mock-data";
 
+const libraryStatuses = [
+  "wishlist",
+  "playing",
+  "beaten",
+  "platinum",
+  "dropped",
+] as const satisfies readonly LibraryStatus[];
+
 const personaPrompts = {
-  recommender: `Você é o Recommender do Hub-games. Sugira jogos com base no backlog, gêneros que o player zera e notas da comunidade. Seja direto e empolgante.`,
-  coach: `Você é o Progress Coach. Lembre o que está em "jogando", sugira marcar zerou/platina. Ritual de 1 toque — sem burocracia.`,
-  platinum: `Você é o Platinum Hunter. Fale de platina só para jogos na biblioteca do player. Dicas honestas, sem spoilers.`,
+  recommender: `Você é o Recommender do Hub-games. Sugira jogos com base no backlog, gêneros que o player zera e notas da comunidade. Seja direto e empolgante. Fale "Quero jogar" — nunca "wishlist".`,
+  coach: `Você é o Progress Coach. Lembre o que está em "Jogando", sugira marcar Zerei/Platinei. Ritual de 1 toque — sem burocracia. Fale "Quero jogar" (nunca "wishlist"). Você só propõe status; o player crava no ritual da UI.`,
+  platinum: `Você é o Platinum Hunter. Fale de platina só para jogos na biblioteca do player. Dicas honestas, sem spoilers. Status muda só no ritual — você pergunta, não grava.`,
 };
 
 export async function handleCompanionChat(
@@ -61,10 +69,11 @@ export async function handleCompanionChat(
   const system = `${personaPrompts[persona]}
 
 Tom: gamer BR, acolhedor, sem spoilers sem permissão.
-Stats do player: ${stats.playing} jogando, ${stats.beaten} zerados, ${stats.platinum} platinas, ${stats.wishlist} na wishlist, ${stats.hours}h totais.
+Stats do player: ${stats.playing} jogando, ${stats.beaten} zerados, ${stats.platinum} platinas, ${stats.wishlist} em Quero jogar, ${stats.hours}h totais.
 Jogando agora: ${playing.map((p) => p.game.title).join(", ") || "nenhum"}.
 
-Use tools para buscar jogos e propor mudanças de status.`;
+Use tools para buscar jogos e propor mudanças de status.
+proposeStatusChange NUNCA grava o save — só devolve um pedido curto (ex.: "Quer cravar Zerei?" / "Manda pra Quero jogar?"). Peça pro player confirmar no ritual de progresso da ficha. Sem o toque no ritual, o status não muda e não tem celebração.`;
 
   const result = streamText({
     model: "openai/gpt-4o-mini",
@@ -97,35 +106,38 @@ Use tools para buscar jogos e propor mudanças de status.`;
             title: row.game.title,
             slug: row.game.slug,
             status: row.entry.status,
+            statusLabel: statusLabels[row.entry.status],
             score: row.entry.personalScore,
           }));
         },
       }),
       proposeStatusChange: tool({
         description:
-          "Propõe mudança de status para um jogo (wishlist/playing/beaten/platinum/dropped)",
+          "Propõe (sem gravar) uma mudança de status. O player confirma no ritual da UI. wishlist=Quero jogar, playing=Jogando, beaten=Zerei, platinum=Platinei, dropped=Abandonei.",
         inputSchema: z.object({
           gameSlug: z.string(),
-          status: z.enum([
-            "wishlist",
-            "playing",
-            "beaten",
-            "platinum",
-            "dropped",
-          ]),
+          status: z.enum(libraryStatuses),
         }),
         execute: async ({ gameSlug, status }) => {
           const { getGameBySlug } = await import("@/lib/games/queries");
           const game = await getGameBySlug(gameSlug);
-          if (!game) return { ok: false, message: "Jogo não encontrado" };
+          if (!game) {
+            return { ok: false, proposed: false, persisted: false, message: "Jogo não encontrado" };
+          }
 
-          await upsertLibraryEntry(userId, game.id, {
-            status: status as LibraryStatus,
-          });
+          const label = statusLabels[status];
+          const ask = statusProposalAsk[status];
 
           return {
             ok: true,
-            message: `Status de ${game.title} atualizado para ${status}.`,
+            proposed: true,
+            persisted: false,
+            game: game.title,
+            slug: game.slug,
+            status,
+            label,
+            ask,
+            message: `${ask} Confirma no ritual de progresso da ficha — eu não gravo o save daqui.`,
           };
         },
       }),

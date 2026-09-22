@@ -233,10 +233,25 @@ export function SteamCabinetPanel({ steam }: { steam: SteamCabinetState }) {
               className="flex items-center justify-between gap-2 rounded-md border border-white/10 bg-card/50 px-3 py-2 text-sm"
             >
               <span className="min-w-0 truncate">{item.title}</span>
-              <span className="shrink-0 font-pixel text-[8px] tracking-widest text-muted-foreground">
-                {item.hours}H ·{" "}
-                {statusLabels[item.status] ?? item.status}
-                {item.created ? " · NOVO" : ""}
+              <span className="shrink-0 text-[11px] text-muted-foreground">
+                <span className="font-pixel text-[8px] tracking-widest">
+                  {item.hours}H
+                </span>
+                {" · "}
+                <span
+                  className={
+                    item.status === "wishlist"
+                      ? "font-sans"
+                      : "font-pixel text-[8px] tracking-widest"
+                  }
+                >
+                  {statusLabels[item.status] ?? item.status}
+                </span>
+                {item.created ? (
+                  <span className="font-pixel text-[8px] tracking-widest">
+                    {" · "}NOVO
+                  </span>
+                ) : null}
               </span>
             </li>
           ))}

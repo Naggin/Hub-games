@@ -16,6 +16,7 @@ import {
   type Celebration,
 } from "@/components/library/progress-celebration";
 import { Button } from "@/components/ui/button";
+import { statusLabels } from "@/lib/constants";
 import type { LibraryStatus } from "@/lib/db/schema";
 import { springSnappy } from "@/lib/motion";
 import { cn } from "@/lib/utils";
@@ -28,31 +29,31 @@ const rituals: {
 }[] = [
   {
     status: "playing",
-    label: "Jogando",
+    label: statusLabels.playing,
     icon: Gamepad2,
     className: "border-neon-cyan/40 text-neon-cyan hover:bg-neon-cyan/10",
   },
   {
     status: "beaten",
-    label: "Zerei",
+    label: statusLabels.beaten,
     icon: Star,
     className: "border-emerald-400/40 text-emerald-400 hover:bg-emerald-400/10",
   },
   {
     status: "platinum",
-    label: "Platinei",
+    label: statusLabels.platinum,
     icon: Trophy,
     className: "border-neon-gold/40 text-neon-gold hover:bg-neon-gold/10 box-glow-gold",
   },
   {
     status: "wishlist",
-    label: "Wishlist",
+    label: statusLabels.wishlist,
     icon: Crown,
     className: "border-neon-magenta/40 text-neon-magenta hover:bg-neon-magenta/10",
   },
   {
     status: "dropped",
-    label: "Drop",
+    label: statusLabels.dropped,
     icon: Skull,
     className: "border-muted-foreground/40 text-muted-foreground hover:bg-muted/20",
   },
@@ -120,7 +121,7 @@ export function ProgressRitual({
                 aria-pressed={active}
                 onClick={() => handleStatus(status)}
                 className={cn(
-                  "relative h-auto w-full flex-col",
+                  "relative h-auto w-full flex-col whitespace-normal",
                   compact ? "gap-1 py-2.5" : "gap-2 py-4",
                   className,
                 )}
@@ -144,7 +145,14 @@ export function ProgressRitual({
                 )}
 
                 <Icon className={compact ? "size-4" : "size-5"} />
-                <span className="text-xs">{label}</span>
+                <span
+                  className={cn(
+                    "font-sans text-xs leading-tight",
+                    status === "wishlist" && "font-normal tracking-normal",
+                  )}
+                >
+                  {label}
+                </span>
               </Button>
             </motion.div>
           );

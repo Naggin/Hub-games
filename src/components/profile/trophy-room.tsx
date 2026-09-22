@@ -451,7 +451,7 @@ function PlayQueue({
         className="lg:col-span-5"
         cabinet="INSERT COIN"
         title="Backlog"
-        empty="Wishlist vazia. Busca no hub e manda pra fila."
+        empty="Nada em Quero jogar. Busca no hub e manda pra fila."
         href="/hub?status=wishlist"
         hrefLabel="Abrir a fila"
         games={backlog}

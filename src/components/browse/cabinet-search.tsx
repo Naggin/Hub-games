@@ -222,7 +222,7 @@ export function CabinetSearch({
                   key={key}
                   variant="outline"
                   className={cn(
-                    "h-7 cursor-pointer px-2.5",
+                    "h-7 cursor-pointer px-2.5 font-sans",
                     status === key && "border-neon-cyan text-neon-cyan",
                   )}
                   onClick={() => setStatus(key)}
